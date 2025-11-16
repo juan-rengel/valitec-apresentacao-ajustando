@@ -185,7 +185,7 @@ const app = initializeApp({
   apiKey:"AIzaSyDPIlkTLbaeUiuvfvijWf5fofREw5oE8ic",
   authDomain:"valitec-mj.firebaseapp.com",
   projectId:"valitec-mj",
-  storageBucket: "valitec-mj.appspot.com",
+  storageBucket: "valitec-mj.firebasestorage.app",
   messagingSenderId:"616592039657",
   appId:"1:616592039657:web:3827a890474111be85da78"
 });
@@ -215,6 +215,7 @@ let codeReader = null;
 let scannerActive = false;
 // 🔥 Variáveis globais corretas para armazenar a foto
 let fotoBase64 = null;   // usado apenas para mostrar a prévia
+
 
 const nomeEl = document.getElementById("nome");
 const codigoEl = document.getElementById("codigo");
