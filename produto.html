@@ -213,6 +213,8 @@ let produtoId = new URLSearchParams(location.search).get("id");
 let fotoBlob = null;
 let codeReader = null;
 let scannerActive = false;
+// 🔥 Variáveis globais corretas para armazenar a foto
+let fotoBase64 = null;   // usado apenas para mostrar a prévia
 
 const nomeEl = document.getElementById("nome");
 const codigoEl = document.getElementById("codigo");
@@ -313,15 +315,26 @@ btnCapturar.onclick = async () => {
 };
 
 /* === ARQUIVO === */
-inputFileEl.addEventListener("change",(e)=>{
-  let f=e.target.files[0];
-  if(!f)return;
-  fotoBlob=f;
-  let url=URL.createObjectURL(f);
-  previewEl.src=url;
-  previewEl.style.display="block";
-});
 
+inputFileEl.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // converte foto em Base64
+    const reader = new FileReader();
+    reader.onload = async function(event) {
+        fotoBase64 = event.target.result;
+        previewEl.src = fotoBase64;
+        previewEl.style.display = "block";
+
+        // converte Base64 → Blob (necessário para Firebase Storage)
+        const resp = await fetch(fotoBase64);
+        fotoBlob = await resp.blob();
+        console.log("📸 Foto da galeria convertida para Blob:", fotoBlob);
+    };
+
+    reader.readAsDataURL(file);
+});
 /* ================== AUTENTICAÇÃO e CONFIG LOJA ================== */
 onAuthStateChanged(auth, async user=>{
   if(!user) return location.href = "index.html";
