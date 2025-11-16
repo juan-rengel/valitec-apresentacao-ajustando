@@ -29,7 +29,7 @@
 </nav>
 </aside>
 <main class="main">
-<h2 id="tituloPagina">Cadastrar</h2>
+<h2 id="tituloPagina">Cadastrar Produto</h2>
 <div id="lojaInlineRow"><label>Loja:</label><select id="selectLojaInline"></select></div>
 <form id="formProduto" class="form-produto">
 <label>Nome do produto </label><input type="text" id="nome" required>
@@ -285,7 +285,7 @@ document.getElementById("btnSalvar").onclick = async ()=>{
     nome,codigo,lote,preco,quantidade,setor,
     dataValidadeISO:iso,
     dataValidadeBR:convBR(iso),
-    fotoURL,fotoURL,
+    fotoURL,
     status:"normal",
     alertaCor:"normal",
     alert5diasSent:false,
