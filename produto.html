@@ -409,8 +409,8 @@ onAuthStateChanged(auth, async user=>{
         validadeEl.value = p.dataValidadeISO || "";
         document.getElementById("quantidade").value = p.quantidade ?? 0;
         if(p.fotoURL){
-          previewEl.src = p.fotoURL;
-          previewEl.style.display = "block";
+          previewEl.src = dataURL;
+previewEl.style.display = "block";
         }
         document.getElementById("tituloPagina").textContent="Editar Produto";
         document.getElementById("btnSalvar").textContent="Salvar Alterações";
