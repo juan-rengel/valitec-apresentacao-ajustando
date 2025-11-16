@@ -29,7 +29,7 @@
 </nav>
 </aside>
 <main class="main">
-<h2 id="tituloPagina">Cadastrar produtos</h2>
+<h2 id="tituloPaginaTexto">Cadastrar produtos</h2>
 <div id="lojaInlineRow"><label>Loja:</label><select id="selectLojaInline"></select></div>
 <form id="formProduto" class="form-produto">
 <label>Nome do produto </label><input type="text" id="nome" required>
@@ -61,7 +61,9 @@
 <button type="button" id="btnOpenCamera">📷 Abrir Câmera</button>
 <button type="button" id="btnCapturar" style="display:none;">Capturar</button>
 </div>
+
 <button type="button" id="btnSalvar" class="btnMain">Salvar Produto</button>
+
 <button type="button" id="btnLimpar" class="btnSecondary">Limpar</button>
 </form>
 <button id="importExcelBtn" style="margin-top:20px;">Importar Excel</button>
@@ -246,7 +248,7 @@ onAuthStateChanged(auth, async user=>{
 
       if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display="block"; }
 
-      document.getElementById("tituloPagina").textContent="Editar Produto";
+      document.getElementById("tituloPaginaTexto").textContent = "Editar Produto";
       document.getElementById("btnSalvar").textContent="Salvar Alterações";
     }
   }
