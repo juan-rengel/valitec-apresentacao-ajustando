@@ -204,8 +204,6 @@ btnMenu.onclick = () => sidebarMenu.classList.toggle("open");
 </script>
 
 <script type="module">
-/* Nenhum comentário aqui dentro — tudo limpo */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -224,7 +222,6 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-/* ================== NOVAS VARIÁVEIS (LOJAS + UI) ================== */
 const lojasValidas = ["loja_cd_cidade","loja_cidade","loja_terranova","loja_manoa","loja_zumbi","loja_oswaldo","loja_mosaico"];
 const friendly = {
   loja_cd_cidade: "CD Cidade",
@@ -255,7 +252,6 @@ const inputFileEl = document.getElementById("foto");
 const scannerPreview = document.getElementById("scannerPreview");
 const selectLojaInline = document.getElementById("selectLojaInline");
 
-/* montar select inline (sempre, depois escondemos quando preciso) */
 lojasValidas.forEach(l=>{
   const o = document.createElement("option");
   o.value = l;
@@ -263,7 +259,6 @@ lojasValidas.forEach(l=>{
   selectLojaInline.appendChild(o);
 });
 
-/* === Conversores === */
 function parsePrice(v){if(!v)return 0;return Number(String(v).replace(".","").replace(",","."));}
 
 function convISO(br){
@@ -275,7 +270,6 @@ function convBR(iso){
   let[y,m,d]=iso.split("-");return `${d}/${m}/${y}`;
 }
 
-/* === SCANNER === */
 function startScanner(){
   if(scannerActive) return;
   if(!window.ZXing) return alert("Scanner não disponível.");
@@ -296,7 +290,6 @@ document.getElementById("btnScan").onclick=()=>{
   if(scannerActive) stopScanner(); else startScanner();
 };
 
-/* === CÂMERA === */
 const cameraPreview=document.getElementById("cameraPreview");
 const btnOpenCamera=document.getElementById("btnOpenCamera");
 const btnCapturar=document.getElementById("btnCapturar");
@@ -310,48 +303,33 @@ btnOpenCamera.onclick=async()=>{
   }catch(e){alert("Erro câmera.");}
 };
 btnCapturar.onclick = async () => {
-
-  // Aguarda carregamento garantido
-  await new Promise(res => setTimeout(res, 600));
-
-  const video = cameraPreview;
-
-  if (!video || video.videoWidth === 0) {
-      alert("A câmera ainda está carregando. Tente novamente.");
-      return;
+  if (!cameraPreview || cameraPreview.videoWidth === 0) {
+    alert("A câmera ainda está carregando. Tente novamente.");
+    return;
   }
 
-  // Canvas fixo e seguro
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = cameraPreview.videoWidth;
+  canvas.height = cameraPreview.videoHeight;
 
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
 
-  // Gera imagem
   const dataURL = canvas.toDataURL("image/jpeg", 0.85);
-
-  // Mostra preview sem quebrar
   previewFoto.src = dataURL;
   previewFoto.style.display = "block";
 
-  // Converte para Blob
   fotoBlob = await (await fetch(dataURL)).blob();
 
   console.log("📸 Foto capturada:", fotoBlob);
 
-  // Fecha a câmera imediatamente (evita zoom quebrar tela)
-  try {
-    if (video.srcObject) {
-      video.srcObject.getTracks().forEach(t => t.stop());
-    }
-    video.style.display = "none";
-    btnCapturar.style.display = "none";
-  } catch (e) {}
+  if (cameraPreview.srcObject) {
+    cameraPreview.srcObject.getTracks().forEach(track => track.stop());
+  }
+  cameraPreview.style.display = "none";
+  btnCapturar.style.display = "none";
 };
 
-/* ================== AUTENTICAÇÃO e CONFIG LOJA ================== */
 onAuthStateChanged(auth, async user=>{
   if(!user) return location.href = "index.html";
 
@@ -364,38 +342,31 @@ onAuthStateChanged(auth, async user=>{
   const cargo = snap.data().cargo || "gerente";
   const lojaUser = snap.data().loja;
 
-  // 🔒 BLOQUEIO DE ACESSO (mesma regra: responsavel/gerente/master allowed)
   if (cargo !== "responsavel" && cargo !== "gerente" && cargo !== "master") {
     alert("❌ Você não tem permissão para acessar esta página.");
     return location.href = "dashboard.html";
   }
 
-  // Se for RESPONSÁVEL → permite override via ?loja= ou via select (persistido)
   if (cargo === "responsavel") {
     lojaAtual = lojasValidas.includes(lojaURL) ? lojaURL : (localStorage.getItem("lastSelectedLoja") || lojaUser);
-    // deixa select visível e apontando para lojaAtual
     selectLojaInline.style.display = "inline-block";
     selectLojaInline.value = lojaAtual;
     selectLojaInline.onchange = () => {
       const nova = selectLojaInline.value;
       localStorage.setItem("lastSelectedLoja", nova);
-      // recarrega mantendo id se existir
       const params = new URLSearchParams(window.location.search);
       if (params.get("id")) params.set("loja", nova);
       else params.set("loja", nova);
       window.location.search = params.toString();
     };
   } else {
-    // gerente/master => loja fixa dele; esconde select
     lojaAtual = lojaUser;
     selectLojaInline.style.display = "none";
-    // se URL tentar sobrescrever, ignorar e logar no console
     if (lojaURL && lojaURL !== lojaUser) {
       console.warn("Parametro ?loja= ignorado para este cargo.");
     }
   }
 
-  // agora carregamos produto caso esteja editando
   if(produtoId){
     try{
       let pSnap = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`));
@@ -409,13 +380,12 @@ onAuthStateChanged(auth, async user=>{
         validadeEl.value = p.dataValidadeISO || "";
         document.getElementById("quantidade").value = p.quantidade ?? 0;
         if(p.fotoURL){
-          previewEl.src = dataURL;
-previewEl.style.display = "block";
+          previewEl.src = p.fotoURL;  // CORREÇÃO AQUI
+          previewEl.style.display = "block";
         }
         document.getElementById("tituloPagina").textContent="Editar Produto";
         document.getElementById("btnSalvar").textContent="Salvar Alterações";
       } else {
-        // produtoId existe mas não no caminho da loja atual - pode ser permissão / loja diferente
         console.warn("Produto não encontrado na loja atual.");
       }
     }catch(e){
@@ -424,10 +394,7 @@ previewEl.style.display = "block";
   }
 });
 
-/* ================== SALVAR ================== */
 document.getElementById("btnSalvar").onclick = async () => {
-
-  // Fecha a câmera antes de salvar (IMPORTANTE no Android/iOS)
   try {
     if (cameraPreview.srcObject) {
       cameraPreview.srcObject.getTracks().forEach(t => t.stop());
@@ -457,194 +424,59 @@ document.getElementById("btnSalvar").onclick = async () => {
   const id = produtoId || crypto.randomUUID();
   let fotoURL = "";
 
-  // -------------------------------------------------------
-  // 📸 UPLOAD DA FOTO (correção completa)
-  // -------------------------------------------------------
   try {
-
     if (fotoBlob) {
-      // Foto nova -> envia SEMPRE
+      console.log("Enviando foto para Storage...");
       const refImg = ref(storage, `produtos/${lojaAtual}/${id}.jpg`);
       await uploadBytes(refImg, fotoBlob);
       fotoURL = await getDownloadURL(refImg);
-
+      console.log("Foto enviada, URL:", fotoURL);
     } else if (produtoId) {
-      // Sem foto nova, mas editando -> mantém foto antiga
       const snapOld = await getDoc(doc(db, `lojas/${lojaAtual}/produtos/${produtoId}`));
       fotoURL = snapOld.exists() ? (snapOld.data().fotoURL || "") : "";
-
     } else {
-      // Novo produto sem foto -> deixa vazio
       fotoURL = "";
     }
-
   } catch (e) {
     console.error("Erro no upload da foto:", e);
     alert("Erro ao enviar a foto. Tente novamente.");
     return;
   }
 
-  
+  await setDoc(
+    doc(db, `lojas/${lojaAtual}/produtos/${id}`),
+    {
+      nome,
+      codigo,
+      lote,
+      preco,
+      quantidade,
+      setor,
+      dataValidadeISO: iso,
+      fotoURL,
+      loja: lojaAtual,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 
-  // -------------------------------------------------------
-  // 📦 NOVO BLOCO PARA TESTAR A CAMERA INICNIO
-  // -------------------------------------------------------
-
-  // -------------------------------------------------------
-  // 📦 Salvando produto
-  // -------------------------------------------------------
-  try {
-    await setDoc(
-      doc(db, `lojas/${lojaAtual}/produtos/${id}`),
-      {
-        nome,
-        codigo,
-        lote,
-        preco,
-        quantidade,
-        setor,
-        dataValidadeISO: iso,
-        dataValidadeBR: convBR(iso),
-        fotoURL,
-        status: "normal",
-        alertaCor: "normal",
-        alert5diasSent: false,
-        criadoEm: produtoId ? undefined : new Date(),
-        atualizadoEm: new Date()
-      },
-      { merge: true }
-    );
-
-    alert("Produto salvo com sucesso!");
-    location.href = "Lista-produtos.html";
-
-  } catch (e) {
-    console.error("Erro ao salvar produto:", e);
-    alert("Erro ao salvar produto. Veja o console.");
-  }
+  alert("Produto salvo com sucesso!");
+  window.location.href = "Lista-produtos.html?loja=" + lojaAtual;
 };
 
-/* === LIMPAR === */
-document.getElementById("btnLimpar").onclick=()=>{
-  formProduto.reset();
-  previewEl.style.display="none";
-  fotoBlob=null;
-  stopScanner();
+document.getElementById("btnLimpar").onclick = () => {
+  nomeEl.value = "";
+  codigoEl.value = "";
+  loteEl.value = "";
+  precoEl.value = "";
+  document.getElementById("quantidade").value = "";
+  setorEl.value = "Mercearia";
+  validadeEl.value = "";
+  previewEl.style.display = "none";
+  previewEl.src = "";
+  fotoBlob = null;
 };
 
-/* === IMPORTAR EXCEL === */
-const excelBtn=document.getElementById("importExcelBtn");
-const excelInput=document.getElementById("excelInput");
-const excelModal=document.getElementById("excelModal");
-const excelClose=document.getElementById("closeExcelModal");
-const tableBody=document.querySelector("#excelTable tbody");
-const saveAll=document.getElementById("saveAllLines");
-
-excelBtn.onclick=()=>excelInput.click();
-
-excelInput.onchange=(e)=>{
-  let file=e.target.files[0]; if(!file)return;
-  let reader=new FileReader();
-  reader.onload=(evt)=>{
-    let wb=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
-    let sheet=wb.Sheets[wb.SheetNames[0]];
-    let json=XLSX.utils.sheet_to_json(sheet,{defval:""});
-    carregarTabela(json);
-    excelModal.style.display="flex";
-  };
-  reader.readAsArrayBuffer(file);
-};
-
-function carregarTabela(lista){
-  tableBody.innerHTML="";
-  lista.forEach(item=>{
-    const nome=item.nome||item.Nome||"";
-    const cod=item.codigo||item.Código||"";
-    const lote=item.lote||"";
-    const val=item.validade||item.Validade||"";
-    const pr=item.preco||"";
-    const forn=item.fornecedor||"";
-
-    let tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${nome}</td>
-      <td>${cod}</td>
-      <td>${lote}</td>
-      <td>${val}</td>
-      <td>${pr}</td>
-      <td>${forn}</td>
-      <td><button class="useLine">Usar</button></td>
-    `;
-    tableBody.appendChild(tr);
-
-    tr.querySelector(".useLine").onclick=()=>{
-      nomeEl.value=nome;
-      codigoEl.value=cod;
-      loteEl.value=lote;
-
-      if(val.includes("/")){
-        let[d,m,y]=val.split("/");
-        validadeEl.value=`${y}-${m}-${d}`;
-      }else{
-        validadeEl.value=val;
-      }
-      precoEl.value=pr;
-      excelModal.style.display="none";
-    };
-  });
-}
-
-excelClose.onclick=()=>excelModal.style.display="none";
-
-saveAll.onclick=async()=>{
-  let rows=document.querySelectorAll("#excelTable tbody tr");
-  if(rows.length===0){alert("Nada a salvar.");return;}
-
-  let ok=0,fail=0;
-  for(let r of rows){
-    let nome=r.cells[0].innerText.trim();
-    let cod=r.cells[1].innerText.trim();
-    let lote=r.cells[2].innerText.trim();
-    let val=r.cells[3].innerText.trim();
-    let pr=parsePrice(r.cells[4].innerText.trim());
-    let forn=r.cells[5].innerText.trim();
-
-    if(!nome||!cod||!lote||!val){fail++;continue;}
-
-    let iso=convISO(val);
-    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${crypto.randomUUID()}`),{
-      nome,codigo:cod,lote,preco:pr,fornecedor:forn||"",
-      setor:"Outros",
-      dataValidadeISO:iso,
-      dataValidadeBR:convBR(iso),
-      fotoURL:"",
-      status:"normal",
-      alertaCor:"normal",
-      alert5diasSent:false,
-      criadoEm:new Date()
-    });
-    ok++;
-  }
-  alert("Enviados: "+ok+" | Falhas: "+fail);
-  excelModal.style.display="none";
-};
-</script>
-
-<button id="toggleTheme" class="theme-toggle">🌙</button>
-<script>
-const toggle=document.getElementById("toggleTheme");
-function aplicaTema(){
-  let t=localStorage.getItem("temaValitec")||"dark";
-  if(t==="light"){document.documentElement.classList.add("light-mode");toggle.textContent="🌙";}
-  else{document.documentElement.classList.remove("light-mode");toggle.textContent="🔆";}
-}
-toggle.onclick=()=>{
-  let t=localStorage.getItem("temaValitec")||"dark";
-  let n=t==="dark"?"light":"dark";
-  localStorage.setItem("temaValitec",n);
-  aplicaTema();
-};
-aplicaTema();
 </script>
 
 </body>
