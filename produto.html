@@ -281,7 +281,8 @@ document.getElementById("btnSalvar").onclick = async ()=>{
     }
   }catch(e){ alert("Erro ao enviar foto."); return; }
 
-  await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
+  try {
+    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
     nome,codigo,lote,preco,quantidade,setor,
     dataValidadeISO:iso,
     dataValidadeBR:convBR(iso),
@@ -295,6 +296,10 @@ document.getElementById("btnSalvar").onclick = async ()=>{
 
   alert("Produto salvo!");
   location.href="Lista-produtos.html";
+  } catch(err) {
+    alert("Erro ao salvar produto: " + err.message);
+    console.error(err);
+  }
 };
 
 /* ================== LIMPAR ================== */
