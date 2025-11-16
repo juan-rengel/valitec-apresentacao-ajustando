@@ -77,7 +77,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script type="module">
-alert("lastSelectedLoja = " + localStorage.getItem("lastSelectedLoja"));
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -210,6 +210,13 @@ inputFileEl.onchange = async (e)=>{
 
 /* ================== AUTENTICAÇÃO ================== */
 onAuthStateChanged(auth, async user=>{
+
+  setTimeout(() => {
+  alert("lojaUser = " + lojaUser);
+  alert("lojaURL = " + lojaURL);
+  alert("lojaAtual = " + lojaAtual);
+}, 1500);
+
   if(!user) return location.href = "index.html";
 
   const snap = await getDoc(doc(db,"usuarios",user.email));
