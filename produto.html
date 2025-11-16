@@ -484,6 +484,46 @@ document.getElementById("btnSalvar").onclick = async () => {
     return;
   }
 
+  
+  // -------------------------------------------------------
+  // 📦 NOVO BLOCO PARA TESTAR A CAMERA INICNIO
+  // -------------------------------------------------------
+
+
+
+
+let fotoBlob = null;
+
+btnCapturar.onclick = () => {
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = cameraPreview.videoWidth;
+        canvas.height = cameraPreview.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(cameraPreview, 0, 0);
+
+        canvas.toBlob(b => {
+            if (!b) {
+                alert("Erro ao capturar foto.");
+                return;
+            }
+            fotoBlob = b; 
+            console.log("Foto capturada:", fotoBlob);
+        }, "image/jpeg", 0.85);
+    } catch (e) {
+        console.error("Erro na captura da foto:", e);
+    }
+};
+
+
+
+
+    
+  // -------------------------------------------------------
+  // 📦 NOVO BLOCO PARA TESTAR A CAMERA INICNIO
+  // -------------------------------------------------------
+
   // -------------------------------------------------------
   // 📦 Salvando produto
   // -------------------------------------------------------
