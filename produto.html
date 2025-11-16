@@ -8,76 +8,115 @@
 <link rel="stylesheet" href="dashboard.css">
 <link rel="stylesheet" href="theme.css">
 <style>
-/* (CSS original completo aqui) */
+/* ----- Estilos mínimos para o formulário ----- */
+body { font-family: 'Poppins', sans-serif; background: #071021; color: #e6eef8; margin:0 }
+.app-container { display:flex; min-height:100vh }
+.sidebar { width:240px; background: #061226; padding:18px; box-shadow: 0 0 30px rgba(0,0,0,0.6) }
+.main { flex:1; padding:22px; }
+.form-produto { max-width:820px; margin:0 auto; display:flex; flex-direction:column; gap:10px }
+label{font-weight:600}
+.input, input, select, button { font-family:inherit }
+input[type=text], input[type=date], input[type=number], select { padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit }
+button { padding:10px 12px; border-radius:8px; border:none; cursor:pointer }
+.btnMain { background:#00c8ff; color:#05202a }
+.btnSecondary { background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.06) }
+.foto-area { display:flex; gap:10px; align-items:center }
+#previewFoto{ width:120px; height:90px; object-fit:cover; border-radius:6px; display:none }
+#cameraPreview{ width:200px; height:140px; border-radius:8px; display:none }
+#scannerPreview{ width:260px; height:200px; display:none }
+.hamburger{ display:none }
+@media(max-width:900px){ .hamburger{ display:block } .sidebar{ position:fixed; left:-260px; top:0; height:100vh } .sidebar.open{ left:0 } }
+#excelModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:9999 }
+#excelModal .card{ background:#071322; padding:16px; border-radius:10px; width:95%; max-width:980px }
 </style>
 </head>
 <body>
 <canvas id="particleCanvas"></canvas>
 <div class="app-container">
-<button id="btnMenu" class="hamburger">☰</button>
-<aside class="sidebar" id="sidebarMenu">
-<nav>
-  <a href="dashboard.html">Painel</a>
-  <a href="#" class="active">Cadastrar Produtos</a>
-  <a href="Lista-produtos.html">Lista de Produtos</a>
-  <a href="Lista-rebaixados.html">Produtos Rebaixados</a>
-  <a href="calendario.html">Calendário</a>
-  <a href="perfil.html">Perfil</a>
-  <a href="cadastro-usuarios.html">Cadastrar Usuários</a>
-  <a href="relatorios.html">Relatórios</a>
-  <a href="#" onclick="localStorage.clear(); location.href='index.html'">Sair</a>
-</nav>
-</aside>
-<main class="main">
-<h2 id="tituloPaginaTexto">Cadastrar p</h2>
-<div id="lojaInlineRow"><label>Loja:</label><select id="selectLojaInline"></select></div>
-<form id="formProduto" class="form-produto">
-<label>Nome do produto </label><input type="text" id="nome" required>
-<label>Código de Barras</label>
-<div class="form-row">
-<input type="text" id="codigo" placeholder="Aguardando leitura..." required>
-<button type="button" id="btnScan">📷 Ler</button>
-</div>
-<video id="scannerPreview" style="display:none;width:260px;margin-top:10px;border:1px solid #fff;border-radius:8px;"></video>
-<label>Lote</label><input type="text" id="lote" required>
-<label>Preço</label><input type="text" id="preco" required placeholder="0,00">
-<label>Quantidade</label><input type="number" id="quantidade" required placeholder="0">
-<label>Setor</label>
-<select id="setor" required>
-<option value="Mercearia">Mercearia</option>
-<option value="Bebidas">Bebidas</option>
-<option value="Frios">Frios</option>
-<option value="Higiene">Higiene</option>
-<option value="Limpeza">Limpeza</option>
-<option value="Açougue">Açougue</option>
-<option value="Outros">Outros</option>
-</select>
-<label>Data de Validade</label><input type="date" id="validade" required>
-<label>Foto do Produto</label>
-<div class="foto-area">
-<video id="cameraPreview" autoplay playsinline style="display:none;width:200px;border-radius:8px;"></video>
-<img id="previewFoto" style="display:none;width:120px;border-radius:6px;border:1px solid #fff;">
-<input type="file" id="foto" accept="image/*" style="display:none;">
-<button type="button" id="btnOpenCamera">📷 Abrir Câmera</button>
-<button type="button" id="btnCapturar" style="display:none;">Capturar</button>
-</div>
+  <button id="btnMenu" class="hamburger">☰</button>
+  <aside class="sidebar" id="sidebarMenu">
+    <nav>
+      <a href="dashboard.html">Painel</a>
+      <a href="#" class="active">Cadastrar Produtos</a>
+      <a href="Lista-produtos.html">Lista de Produtos</a>
+      <a href="Lista-rebaixados.html">Produtos Rebaixados</a>
+      <a href="calendario.html">Calendário</a>
+      <a href="perfil.html">Perfil</a>
+      <a href="cadastro-usuarios.html">Cadastrar Usuários</a>
+      <a href="relatorios.html">Relatórios</a>
+      <a href="#" onclick="localStorage.clear(); location.href='index.html'">Sair</a>
+    </nav>
+  </aside>
+  <main class="main">
+    <h2 id="tituloPaginaTexto">Cadastrar produto</h2>
+    <div id="lojaInlineRow"><label>Loja:</label><select id="selectLojaInline"></select></div>
 
-<button type="button" id="btnSalvar" class="btnMain">Salvar Produto</button>
+    <form id="formProduto" class="form-produto" onsubmit="return false;">
+      <label>Nome do produto</label>
+      <input type="text" id="nome" required>
 
-<button type="button" id="btnLimpar" class="btnSecondary">Limpar</button>
-</form>
-<button id="importExcelBtn" style="margin-top:20px;">Importar Excel</button>
-<input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none;">
-<div id="excelModal"><div class="card"><h2>Pré-visualização</h2><table id="excelTable"><thead><tr><th>Nome</th><th>Código</th><th>Lote</th><th>Validade</th><th>Preço</th><th>Fornecedor</th><th>Ações</th></tr></thead><tbody></tbody></table><div style="margin-top:14px;text-align:right;"><button id="closeExcelModal">Fechar</button><button id="saveAllLines">Salvar Tudo</button></div></div></div>
-</main>
+      <label>Código de Barras</label>
+      <div class="form-row" style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="codigo" placeholder="Aguardando leitura..." required style="flex:1">
+        <button type="button" id="btnScan">📷 Ler</button>
+      </div>
+      <video id="scannerPreview" ></video>
+
+      <label>Lote</label>
+      <input type="text" id="lote" required>
+
+      <label>Preço</label>
+      <input type="text" id="preco" required placeholder="0,00">
+
+      <label>Quantidade</label>
+      <input type="number" id="quantidade" required placeholder="0">
+
+      <label>Setor</label>
+      <select id="setor" required>
+        <option value="Mercearia">Mercearia</option>
+        <option value="Bebidas">Bebidas</option>
+        <option value="Frios">Frios</option>
+        <option value="Higiene">Higiene</option>
+        <option value="Limpeza">Limpeza</option>
+        <option value="Açougue">Açougue</option>
+        <option value="Outros">Outros</option>
+      </select>
+
+      <label>Data de Validade</label>
+      <input type="date" id="validade" required>
+
+      <label>Foto do Produto</label>
+      <div class="foto-area">
+        <video id="cameraPreview" autoplay playsinline></video>
+        <img id="previewFoto" alt="preview">
+        <input type="file" id="foto" accept="image/*" style="display:none">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <button type="button" id="btnOpenCamera">📷 Abrir Câmera</button>
+          <button type="button" id="btnCapturar" style="display:none">Capturar</button>
+          <button type="button" id="btnOpenFile">📁 Escolher</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button type="button" id="btnSalvar" class="btnMain">Salvar Produto</button>
+        <button type="button" id="btnLimpar" class="btnSecondary">Limpar</button>
+      </div>
+    </form>
+
+    <div style="margin-top:18px">
+      <button id="importExcelBtn">Importar Excel</button>
+      <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none">
+    </div>
+
+    <div id="excelModal"><div class="card"><h3>Pré-visualização</h3><table id="excelTable" style="width:100%;border-collapse:collapse"><thead><tr><th>Nome</th><th>Código</th><th>Lote</th><th>Validade</th><th>Preço</th><th>Fornecedor</th><th>Ações</th></tr></thead><tbody></tbody></table><div style="text-align:right;margin-top:10px"><button id="closeExcelModal">Fechar</button><button id="saveAllLines">Salvar Tudo</button></div></div></div>
+
+  </main>
 </div>
-
 
 <script src="https://unpkg.com/@zxing/browser@0.1.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
@@ -96,343 +135,140 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-/* ================== VARS ================== */
+/* ===== Vars/UI ===== */
 const lojasValidas = ["loja_cd_cidade","loja_cidade","loja_terranova","loja_manoa","loja_zumbi","loja_oswaldo","loja_mosaico"];
-const friendly = {
-  loja_cd_cidade: "CD Cidade",
-  loja_cidade: "Cidade Nova",
-  loja_terranova: "Terra Nova",
-  loja_manoa: "Manoa",
-  loja_zumbi: "Zumbi",
-  loja_oswaldo: "Oswaldo",
-  loja_mosaico: "Mosaico"
-};
-
+const friendly = { loja_cd_cidade:"CD Cidade", loja_cidade:"Cidade Nova", loja_terranova:"Terra Nova", loja_manoa:"Manoa", loja_zumbi:"Zumbi", loja_oswaldo:"Oswaldo", loja_mosaico:"Mosaico" };
 const urlParams = new URLSearchParams(window.location.search);
-const lojaURL = urlParams.get("loja");
-
+const lojaURL = urlParams.get('loja');
 let lojaAtual = null;
-let produtoId = urlParams.get("id");
+let produtoId = urlParams.get('id');
 let fotoBlob = null;
-let fotoBase64 = null;
-let codeReader = null;
-let scannerActive = false;
 
-/* ================== ELEMENTS ================== */
-const nomeEl = document.getElementById("nome");
-const codigoEl = document.getElementById("codigo");
-const loteEl = document.getElementById("lote");
-const precoEl = document.getElementById("preco");
-const quantidadeEl = document.getElementById("quantidade");
-const setorEl = document.getElementById("setor");
-const validadeEl = document.getElementById("validade");
-const previewEl = document.getElementById("previewFoto");
-const inputFileEl = document.getElementById("foto");
-const scannerPreview = document.getElementById("scannerPreview");
-const selectLojaInline = document.getElementById("selectLojaInline");
-const cameraPreview = document.getElementById("cameraPreview");
-const btnOpenCamera = document.getElementById("btnOpenCamera");
-const btnCapturar = document.getElementById("btnCapturar");
-const formProduto = document.getElementById("formProduto");
-const btnSalvarEl = document.getElementById("btnSalvar");
-const btnLimparEl = document.getElementById("btnLimpar");
+/* Elements */
+const selectLojaInline = document.getElementById('selectLojaInline');
+const nomeEl = document.getElementById('nome');
+const codigoEl = document.getElementById('codigo');
+const loteEl = document.getElementById('lote');
+const precoEl = document.getElementById('preco');
+const quantidadeEl = document.getElementById('quantidade');
+const setorEl = document.getElementById('setor');
+const validadeEl = document.getElementById('validade');
+const previewEl = document.getElementById('previewFoto');
+const inputFileEl = document.getElementById('foto');
+const cameraPreview = document.getElementById('cameraPreview');
+const btnOpenCamera = document.getElementById('btnOpenCamera');
+const btnCapturar = document.getElementById('btnCapturar');
+const btnOpenFile = document.getElementById('btnOpenFile');
+const scannerPreview = document.getElementById('scannerPreview');
 
-/* ================== HELPERS ================== */
-function parsePrice(v){ if(!v) return 0; return Number(String(v).replace(".", "").replace(",", ".")) || 0; }
-function convISO(br){ if(!br) return ""; if(br.includes("/")){ let[dd,mm,yy]=br.split("/"); return `${yy}-${mm}-${dd}`; } return br; }
-function convBR(iso){ if(!iso) return ""; let[y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
+/* Build loja select */
+lojasValidas.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = friendly[l] || l; selectLojaInline.appendChild(o); });
 
-/* ================== POPULATE LOJA SELECT ================== */
-if (selectLojaInline) {
-  lojasValidas.forEach(l=>{
-    const o = document.createElement("option");
-    o.value = l;
-    o.textContent = friendly[l] || l;
-    selectLojaInline.appendChild(o);
-  });
+/* scanner */
+let codeReader = null; let scannerActive = false;
+function startScanner(){ if(scannerActive) return; if(!window.ZXing) return alert('Scanner não disponível'); codeReader = new ZXing.BrowserMultiFormatReader(); scannerActive=true; scannerPreview.style.display='block'; codeReader.decodeFromVideoDevice(null, scannerPreview, (result)=>{ if(result){ codigoEl.value = result.text; stopScanner(); } }); }
+function stopScanner(){ if(!scannerActive) return; scannerActive=false; try{ codeReader.reset(); }catch(e){} scannerPreview.style.display='none'; }
+document.getElementById('btnScan').onclick = ()=> { if(scannerActive) stopScanner(); else startScanner(); };
+
+/* camera capture */
+btnOpenCamera.onclick = async () => {
+  try{ const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } }); cameraPreview.srcObject = s; cameraPreview.style.display='block'; btnCapturar.style.display='inline-block'; }catch(e){ alert('Erro ao abrir câmera: ' + (e.message||e)); }
+}
+btnCapturar.onclick = async ()=>{
+  await new Promise(r => setTimeout(r,500));
+  if(!cameraPreview.videoWidth) return alert('Câmera carregando...');
+  const canvas = document.createElement('canvas'); canvas.width = cameraPreview.videoWidth; canvas.height = cameraPreview.videoHeight; const ctx = canvas.getContext('2d'); ctx.drawImage(cameraPreview,0,0); const dataUrl = canvas.toDataURL('image/jpeg',0.9); previewEl.src = dataUrl; previewEl.style.display='block'; fotoBlob = await (await fetch(dataUrl)).blob();
 }
 
-/* ================== SCANNER ================== */
-function startScanner(){
-  if(scannerActive) return;
-  if(!window.ZXing) { console.warn("ZXing não disponível"); alert("Scanner não disponível."); return; }
-  codeReader = new ZXing.BrowserMultiFormatReader();
-  scannerActive = true;
-  try {
-    scannerPreview.style.display = "block";
-    codeReader.decodeFromVideoDevice(null, scannerPreview, (result) => {
-      if(result && result.text){
-        codigoEl.value = result.text;
-        stopScanner();
-      }
-    });
-  } catch(e){
-    console.error("Erro startScanner:", e);
-    stopScanner();
-  }
-}
-function stopScanner(){
-  scannerActive = false;
-  if(codeReader){
-    try{ codeReader.reset(); }catch(e){ /* ignore */ }
-    codeReader = null;
-  }
-  if(scannerPreview) scannerPreview.style.display = "none";
-}
-const btnScan = document.getElementById("btnScan");
-if(btnScan) btnScan.onclick = ()=> { if(scannerActive) stopScanner(); else startScanner(); };
+/* choose file */
+btnOpenFile.onclick = ()=> inputFileEl.click();
+inputFileEl.onchange = async (e)=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = async ev => { previewEl.src = ev.target.result; previewEl.style.display='block'; fotoBlob = await (await fetch(ev.target.result)).blob(); }; r.readAsDataURL(f); };
 
-/* ================== CAMERA CAPTURE ================== */
-if(btnOpenCamera){
-  btnOpenCamera.onclick = async ()=>{
-    try{
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      cameraPreview.srcObject = s;
-      cameraPreview.style.display = "block";
-      btnCapturar.style.display = "inline-block";
-    }catch(err){
-      console.error("Erro abrir câmera:", err);
-      alert("Erro ao acessar câmera. Verifique permissões.");
-    }
-  };
-}
-if(btnCapturar){
-  btnCapturar.onclick = async ()=>{
-    await new Promise(r=>setTimeout(r,700));
-    if(!cameraPreview || !cameraPreview.videoWidth){ alert("Câmera carregando. Tente novamente."); return; }
-    const canvas = document.createElement("canvas");
-    canvas.width = cameraPreview.videoWidth;
-    canvas.height = cameraPreview.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
-    const dataURL = canvas.toDataURL("image/jpeg", 0.9);
-    previewEl.src = dataURL;
-    previewEl.style.display = "block";
-    try {
-      fotoBlob = await (await fetch(dataURL)).blob();
-    } catch(e){ console.error("Erro gerar blob:", e); }
-  };
-}
+/* helpers */
+function parsePrice(v){ if(!v) return 0; return Number(String(v).replace('.', '').replace(',', '.')) || 0; }
+function convBR(iso){ if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
 
-/* ================== INPUT FILE ================== */
-if(inputFileEl){
-  inputFileEl.addEventListener("change", async (e)=>{
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev)=>{
-      fotoBase64 = ev.target.result;
-      previewEl.src = fotoBase64;
-      previewEl.style.display = "block";
-      try {
-        const resp = await fetch(fotoBase64);
-        fotoBlob = await resp.blob();
-      } catch(e){ console.error("Erro convertendo base64->blob", e); }
-    };
-    reader.readAsDataURL(file);
-  }, false);
-}
+/* ================= AUTH & Loja logic ================= */
+onAuthStateChanged(auth, async user => {
+  if(!user) return location.href = 'index.html';
+  const snap = await getDoc(doc(db,'usuarios',user.email));
+  if(!snap.exists()){ alert('Perfil não encontrado'); return location.href='index.html'; }
+  const cargo = snap.data().cargo || 'gerente';
+  const lojaUser = snap.data().loja;
 
-/* ================== AUTH & LOJA LOGIC ================== */
-onAuthStateChanged(auth, async (user) => {
-  if(!user) return location.href = "index.html";
-
-  // fetch perfil
-  let snap;
-  try {
-    snap = await getDoc(doc(db, "usuarios", user.email));
-  } catch(e){
-    console.error("Erro getDoc usuario:", e);
-    alert("Erro ao carregar perfil. Veja console.");
-    return location.href = "index.html";
-  }
-  if(!snap.exists()){
-    alert("Perfil não encontrado."); return location.href = "index.html";
-  }
-
-  const cargo = snap.data().cargo || "gerente";
-  const lojaUser = snap.data().loja || null;
-
-  // permission check
-  if(cargo !== "responsavel" && cargo !== "gerente" && cargo !== "master"){
-    alert("Você não tem permissão para acessar esta página.");
-    return location.href = "dashboard.html";
-  }
-
-  // define lojaAtual com prioridade: (1) lojaURL (apenas se responsavel), (2) lastSelectedLoja, (3) lojaUser
-  if(cargo === "responsavel"){
-    // prefer URL if válida
-    if(lojaURL && lojasValidas.includes(lojaURL)){
-      lojaAtual = lojaURL;
-    } else {
-      const last = localStorage.getItem("lastSelectedLoja");
-      lojaAtual = last && lojasValidas.includes(last) ? last : (lojaUser && lojasValidas.includes(lojaUser) ? lojaUser : lojasValidas[0]);
-    }
-    // show select and set handlers
-    if(selectLojaInline){
-      selectLojaInline.style.display = "inline-block";
-      selectLojaInline.value = lojaAtual || lojasValidas[0];
-      selectLojaInline.onchange = ()=>{
-        const nova = selectLojaInline.value;
-        localStorage.setItem("lastSelectedLoja", nova);
-        // reload with loja param to keep behavior consistent
-        const params = new URLSearchParams(window.location.search);
-        params.set("loja", nova);
-        if(produtoId) params.set("id", produtoId);
-        window.location.search = params.toString();
-      };
-    }
+  if(cargo === 'responsavel'){
+    lojaAtual = lojasValidas.includes(lojaURL) ? lojaURL : (localStorage.getItem('lastSelectedLoja') || lojaUser);
+    selectLojaInline.style.display='inline-block'; selectLojaInline.value = lojaAtual;
+    selectLojaInline.onchange = ()=>{ lojaAtual = selectLojaInline.value; localStorage.setItem('lastSelectedLoja', lojaAtual); window.location.search = `?loja=${lojaAtual}${produtoId?`&id=${produtoId}`:''}` }
   } else {
-    // gerente/master -> force lojaUser (if exists)
-    lojaAtual = lojaUser || localStorage.getItem("lastSelectedLoja") || lojasValidas[0];
-    if(selectLojaInline) selectLojaInline.style.display = "none";
-    if(lojaURL && lojaURL !== lojaUser){
-      console.warn("Parâmetro ?loja= ignorado para seu cargo.");
-    }
+    lojaAtual = lojaUser; selectLojaInline.style.display='none';
+    if(lojaURL && lojaURL !== lojaUser) console.warn('Parametro ?loja= ignorado para este cargo.');
   }
 
-  // final safety: if lojaAtual not in valid list, pick default
-  if(!lojasValidas.includes(lojaAtual)) lojaAtual = lojasValidas[0];
-
-  console.log("lojaUser:", lojaUser, "lojaURL:", lojaURL, "lojaAtual:", lojaAtual, "cargo:", cargo);
-
-  // carregar produto se editando
-  if(produtoId){
-    try{
-      const pSnap = await getDoc(doc(db, `lojas/${lojaAtual}/produtos/${produtoId}`));
-      if(pSnap.exists()){
-        const p = pSnap.data();
-        nomeEl.value = p.nome || "";
-        codigoEl.value = p.codigo || "";
-        loteEl.value = p.lote || "";
-        precoEl.value = p.preco || "";
-        setorEl.value = p.setor || "Outros";
-        validadeEl.value = p.dataValidadeISO || "";
-        quantidadeEl.value = p.quantidade ?? 0;
-        if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display = "block"; }
-        document.getElementById("tituloPaginaTexto").textContent = "Editar Produto";
-        btnSalvarEl.textContent = "Salvar Alterações";
-      } else {
-        console.warn("Produto não encontrado nesta loja:", lojaAtual);
-      }
-    }catch(e){
-      console.error("Erro ao carregar produto:", e);
-    }
+  // carregar produto para edição se houver
+  if(produtoId){ try{ const pSnap = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`)); if(pSnap.exists()){ const p = pSnap.data(); nomeEl.value = p.nome || ''; codigoEl.value = p.codigo || ''; loteEl.value = p.lote || ''; precoEl.value = p.preco || ''; setorEl.value = p.setor || 'Outros'; validadeEl.value = p.dataValidadeISO || ''; quantidadeEl.value = p.quantidade ?? 0; if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display='block'; } document.getElementById('tituloPaginaTexto').textContent = 'Editar Produto'; document.getElementById('btnSalvar').textContent = 'Salvar Alterações'; } }catch(e){ console.error('Erro carregar produto', e); }
   }
 });
 
-/* ================== SALVAR ================== */
-if(btnSalvarEl){
-  btnSalvarEl.onclick = async ()=>{
-    try{
-      // close camera stream if open
-      try {
-        if(cameraPreview && cameraPreview.srcObject){
-          cameraPreview.srcObject.getTracks().forEach(t=>t.stop());
-          cameraPreview.srcObject = null;
-          cameraPreview.style.display = "none";
-        }
-      } catch(e){ /* ignore */ }
+/* ================= SALVAR ================= */
+document.getElementById('btnSalvar').onclick = async ()=>{
+  try{
+    // stop camera if open
+    if(cameraPreview.srcObject) { cameraPreview.srcObject.getTracks().forEach(t=>t.stop()); cameraPreview.style.display='none'; }
 
-      const nome = nomeEl.value.trim();
-      const codigo = codigoEl.value.trim();
-      const lote = loteEl.value.trim();
-      const preco = parsePrice(precoEl.value);
-      const quantidade = Number(quantidadeEl.value || 0);
-      const setor = setorEl.value;
-      const iso = validadeEl.value;
+    const nome = nomeEl.value.trim(); const codigo = codigoEl.value.trim(); const lote = loteEl.value.trim();
+    const preco = parsePrice(precoEl.value); const quantidade = Number(quantidadeEl.value || 0); const setor = setorEl.value; const iso = validadeEl.value;
 
-      if(!nome || !codigo || !lote || !iso){
-        alert("Preencha todos os campos obrigatórios.");
-        return;
-      }
+    if(!nome || !codigo || !lote || !iso){ alert('Preencha todos os campos obrigatórios.'); return; }
+    if(!lojaAtual){ alert('Loja não selecionada.'); return; }
 
-      if(!lojaAtual){
-        alert("Loja não definida. Verifique usuário/seleção de loja.");
-        return;
-      }
+    const id = produtoId || crypto.randomUUID(); let fotoURL = '';
 
-      const id = produtoId || crypto.randomUUID();
-      let fotoURL = "";
-
-      // upload foto se tiver
-      if(fotoBlob){
-        try{
-          const refImg = ref(storage, `produtos/${lojaAtual}/${id}.jpg`);
-          await uploadBytes(refImg, fotoBlob);
-          fotoURL = await getDownloadURL(refImg);
-        }catch(e){
-          console.error("Erro upload foto:", e);
-          alert("Erro ao enviar a foto. Veja console.");
-          return;
-        }
-      } else if(produtoId){
-        // manter foto antiga caso exista
-        try{
-          const oldSnap = await getDoc(doc(db, `lojas/${lojaAtual}/produtos/${produtoId}`));
-          fotoURL = oldSnap.exists() ? (oldSnap.data().fotoURL || "") : "";
-        }catch(e){ console.error("Erro ler foto antiga:", e); }
-      }
-
-      // salvar produto
-      try{
-        await setDoc(doc(db, `lojas/${lojaAtual}/produtos/${id}`), {
-          nome,
-          codigo,
-          lote,
-          preco,
-          quantidade,
-          setor,
-          dataValidadeISO: iso,
-          dataValidadeBR: convBR(iso),
-          fotoURL,
-          status: "normal",
-          alertaCor: "normal",
-          alert5diasSent: false,
-          criadoEm: produtoId ? undefined : new Date(),
-          atualizadoEm: new Date()
-        }, { merge: true });
-      }catch(e){
-        console.error("Erro setDoc produto:", e);
-        alert("Erro ao salvar produto. Veja console.");
-        return;
-      }
-
-      alert("Produto salvo com sucesso!");
-      window.location.href = "Lista-produtos.html";
-    }catch(err){
-      console.error("Erro btnSalvar:", err);
-      alert("Erro inesperado. Veja console.");
+    if(fotoBlob){
+      const refImg = ref(storage, `produtos/${lojaAtual}/${id}.jpg`);
+      await uploadBytes(refImg, fotoBlob);
+      fotoURL = await getDownloadURL(refImg);
+    } else if(produtoId){
+      const old = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`)); if(old.exists()) fotoURL = old.data().fotoURL || '';
     }
-  };
-}
 
-/* ================== LIMPAR ================== */
-if(btnLimparEl){
-  btnLimparEl.onclick = ()=>{
-    try{
-      formProduto.reset();
-      if(previewEl) previewEl.style.display = "none";
-      fotoBlob = null;
-      stopScanner();
-    }catch(e){ console.error("Erro limpar:", e); }
-  };
-}
+    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
+      nome, codigo, lote, preco, quantidade, setor,
+      dataValidadeISO: iso,
+      dataValidadeBR: convBR(iso),
+      fotoURL, status: 'normal', alertaCor: 'normal', alert5diasSent: false,
+      criadoEm: produtoId? undefined : new Date(), atualizadoEm: new Date()
+    }, { merge: true });
 
-/* ================== IMPORT EXCEL (mantive sua lógica mas sem alterações drásticas) ================== */
-/* Coloque aqui suas funções de import / preview / saveAll exatamente como tinham no original. */
+    alert('Produto salvo!'); location.href = 'Lista-produtos.html';
+  }catch(err){ console.error(err); alert('Erro ao salvar: ' + (err.message || err)); }
+};
+
+/* limpar */
+document.getElementById('btnLimpar').onclick = ()=>{ document.getElementById('formProduto').reset(); previewEl.style.display='none'; fotoBlob = null; stopScanner(); }
+
+/* ================ Excel import ================= */
+const excelBtn = document.getElementById('importExcelBtn'); const excelInput = document.getElementById('excelInput'); const excelModal = document.getElementById('excelModal'); const tableBody = document.querySelector('#excelTable tbody'); const closeExcelModal = document.getElementById('closeExcelModal'); const saveAll = document.getElementById('saveAllLines');
+
+excelBtn.onclick = ()=> excelInput.click();
+excelInput.onchange = (e)=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev)=>{ try{ const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const sheet = wb.Sheets[wb.SheetNames[0]]; const json = XLSX.utils.sheet_to_json(sheet, { defval: '' }); renderExcelPreview(json); excelModal.style.display='flex'; }catch(err){ alert('Erro ler Excel: ' + err.message) } }; r.readAsArrayBuffer(f); }
+
+function renderExcelPreview(list){ tableBody.innerHTML=''; list.forEach(item=>{ const nome = item.nome || item.Nome || ''; const cod = item.codigo || item.Código || item.Codigo || ''; const lote = item.lote || ''; const val = item.validade || item.Validade || ''; const pr = item.preco || item.Preço || ''; const forn = item.fornecedor || item.Fornecedor || ''; const tr = document.createElement('tr'); tr.innerHTML = `<td>${nome}</td><td>${cod}</td><td>${lote}</td><td>${val}</td><td>${pr}</td><td>${forn}</td><td><button class='useLine'>Usar</button></td>`; tableBody.appendChild(tr); tr.querySelector('.useLine').onclick = ()=>{ nomeEl.value = nome; codigoEl.value = cod; loteEl.value = lote; if(val.includes('/')){ const [d,m,y] = val.split('/'); validadeEl.value = `${y}-${m}-${d}` } else { validadeEl.value = val } precoEl.value = pr; excelModal.style.display='none'; } }); }
+closeExcelModal.onclick = ()=> excelModal.style.display='none';
+
+saveAll.onclick = async ()=>{
+  const rows = Array.from(document.querySelectorAll('#excelTable tbody tr'));
+  if(rows.length===0){ alert('Nada a salvar'); return; }
+  let ok=0, fail=0;
+  for(const r of rows){ const nome = r.cells[0].innerText.trim(); const cod = r.cells[1].innerText.trim(); const lote = r.cells[2].innerText.trim(); const val = r.cells[3].innerText.trim(); const pr = parsePrice(r.cells[4].innerText.trim()); const forn = r.cells[5].innerText.trim(); if(!nome||!cod||!lote||!val){ fail++; continue; } const iso = val.includes('/') ? val.split('/').reverse().join('-') : val; try{ await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${crypto.randomUUID()}`),{ nome, codigo: cod, lote, preco: pr, fornecedor: forn||'', setor:'Outros', dataValidadeISO: iso, dataValidadeBR: val.includes('/')? val : convBR(iso), fotoURL:'', status:'normal', alertaCor:'normal', alert5diasSent:false, criadoEm: new Date() }); ok++; }catch(e){ console.error('erro saveAll', e); fail++; } }
+  alert('Enviados: ' + ok + ' | Falhas: ' + fail); excelModal.style.display='none';
+}
 
 </script>
 
-
-
-
-
 <script>
-/* Este script controla o menu hamburger */
-const btnMenu = document.getElementById("btnMenu");
-const sidebarMenu = document.getElementById("sidebarMenu");
-btnMenu.onclick = () => sidebarMenu.classList.toggle("open");
+/* hamburger */
+const btnMenu = document.getElementById('btnMenu'); const sidebarMenu = document.getElementById('sidebarMenu'); btnMenu.onclick = ()=> sidebarMenu.classList.toggle('open');
 </script>
 </body>
 </html>
