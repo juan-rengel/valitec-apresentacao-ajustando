@@ -92,13 +92,11 @@ const app = initializeApp({
   appId:"1:616592039657:web:3827a890474111be85da78"
 });
 
-/* ================== INÍCIO DO SCRIPT COMPLETO ================== */
-
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
 
-/* ================== VARIÁVEIS GERAIS ================== */
+/* ================== VARS ================== */
 const lojasValidas = ["loja_cd_cidade","loja_cidade","loja_terranova","loja_manoa","loja_zumbi","loja_oswaldo","loja_mosaico"];
 const friendly = {
   loja_cd_cidade: "CD Cidade",
@@ -120,11 +118,12 @@ let fotoBase64 = null;
 let codeReader = null;
 let scannerActive = false;
 
-/* ================== ELEMENTOS ================== */
+/* ================== ELEMENTS ================== */
 const nomeEl = document.getElementById("nome");
 const codigoEl = document.getElementById("codigo");
 const loteEl = document.getElementById("lote");
 const precoEl = document.getElementById("preco");
+const quantidadeEl = document.getElementById("quantidade");
 const setorEl = document.getElementById("setor");
 const validadeEl = document.getElementById("validade");
 const previewEl = document.getElementById("previewFoto");
@@ -134,199 +133,301 @@ const selectLojaInline = document.getElementById("selectLojaInline");
 const cameraPreview = document.getElementById("cameraPreview");
 const btnOpenCamera = document.getElementById("btnOpenCamera");
 const btnCapturar = document.getElementById("btnCapturar");
+const formProduto = document.getElementById("formProduto");
+const btnSalvarEl = document.getElementById("btnSalvar");
+const btnLimparEl = document.getElementById("btnLimpar");
 
-/* ================== FUNÇÕES AUXILIARES ================== */
-function parsePrice(v){ return Number(String(v).replace(".","").replace(",",".")) || 0; }
-function convISO(br){ if(br.includes("/")){ let[dd,mm,yy]=br.split("/"); return `${yy}-${mm}-${dd}`; } return br; }
+/* ================== HELPERS ================== */
+function parsePrice(v){ if(!v) return 0; return Number(String(v).replace(".", "").replace(",", ".")) || 0; }
+function convISO(br){ if(!br) return ""; if(br.includes("/")){ let[dd,mm,yy]=br.split("/"); return `${yy}-${mm}-${dd}`; } return br; }
 function convBR(iso){ if(!iso) return ""; let[y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 
-/* ================== MONTAGEM DO SELECT DE LOJA ================== */
-lojasValidas.forEach(l=>{
-  const o=document.createElement("option");
-  o.value=l;
-  o.textContent=friendly[l] || l;
-  selectLojaInline.appendChild(o);
-});
+/* ================== POPULATE LOJA SELECT ================== */
+if (selectLojaInline) {
+  lojasValidas.forEach(l=>{
+    const o = document.createElement("option");
+    o.value = l;
+    o.textContent = friendly[l] || l;
+    selectLojaInline.appendChild(o);
+  });
+}
 
 /* ================== SCANNER ================== */
 function startScanner(){
   if(scannerActive) return;
-  if(!window.ZXing) return alert("Scanner não disponível.");
+  if(!window.ZXing) { console.warn("ZXing não disponível"); alert("Scanner não disponível."); return; }
   codeReader = new ZXing.BrowserMultiFormatReader();
   scannerActive = true;
-  scannerPreview.style.display = "block";
-  codeReader.decodeFromVideoDevice(null, scannerPreview, result => {
-    if(result){ codigoEl.value = result.text; stopScanner(); }
-  });
+  try {
+    scannerPreview.style.display = "block";
+    codeReader.decodeFromVideoDevice(null, scannerPreview, (result) => {
+      if(result && result.text){
+        codigoEl.value = result.text;
+        stopScanner();
+      }
+    });
+  } catch(e){
+    console.error("Erro startScanner:", e);
+    stopScanner();
+  }
 }
 function stopScanner(){
   scannerActive = false;
-  if(codeReader){ try{ codeReader.reset(); }catch(e){} }
-  scannerPreview.style.display = "none";
+  if(codeReader){
+    try{ codeReader.reset(); }catch(e){ /* ignore */ }
+    codeReader = null;
+  }
+  if(scannerPreview) scannerPreview.style.display = "none";
 }
-document.getElementById("btnScan").onclick = ()=>{
-  if(scannerActive) stopScanner(); else startScanner();
-};
+const btnScan = document.getElementById("btnScan");
+if(btnScan) btnScan.onclick = ()=> { if(scannerActive) stopScanner(); else startScanner(); };
 
-/* ================== CÂMERA ================== */
-btnOpenCamera.onclick = async ()=>{
-  try{
-    let stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } });
-    cameraPreview.srcObject = stream;
-    cameraPreview.style.display = "block";
-    btnCapturar.style.display = "inline-block";
-  }catch(e){ alert("Erro ao acessar câmera."); }
-};
-
-btnCapturar.onclick = async ()=>{
-  await new Promise(r=>setTimeout(r,700));
-  if(!cameraPreview.videoWidth){ alert("Câmera carregando, tente de novo."); return; }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = cameraPreview.videoWidth;
-  canvas.height = cameraPreview.videoHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(cameraPreview,0,0);
-  const dataURL = canvas.toDataURL("image/jpeg",0.9);
-
-  previewEl.src = dataURL;
-  previewEl.style.display = "block";
-
-  fotoBlob = await (await fetch(dataURL)).blob();
-};
-
-/* ================== INPUT DE ARQUIVO ================== */
-inputFileEl.onchange = async (e)=>{
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    fotoBase64 = ev.target.result;
-    previewEl.src = fotoBase64;
-    previewEl.style.display="block";
-    fotoBlob = await (await fetch(fotoBase64)).blob();
+/* ================== CAMERA CAPTURE ================== */
+if(btnOpenCamera){
+  btnOpenCamera.onclick = async ()=>{
+    try{
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      cameraPreview.srcObject = s;
+      cameraPreview.style.display = "block";
+      btnCapturar.style.display = "inline-block";
+    }catch(err){
+      console.error("Erro abrir câmera:", err);
+      alert("Erro ao acessar câmera. Verifique permissões.");
+    }
   };
-  reader.readAsDataURL(file);
-};
+}
+if(btnCapturar){
+  btnCapturar.onclick = async ()=>{
+    await new Promise(r=>setTimeout(r,700));
+    if(!cameraPreview || !cameraPreview.videoWidth){ alert("Câmera carregando. Tente novamente."); return; }
+    const canvas = document.createElement("canvas");
+    canvas.width = cameraPreview.videoWidth;
+    canvas.height = cameraPreview.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+    const dataURL = canvas.toDataURL("image/jpeg", 0.9);
+    previewEl.src = dataURL;
+    previewEl.style.display = "block";
+    try {
+      fotoBlob = await (await fetch(dataURL)).blob();
+    } catch(e){ console.error("Erro gerar blob:", e); }
+  };
+}
 
-/* ================== AUTENTICAÇÃO ================== */
-onAuthStateChanged(auth, async user=>{
+/* ================== INPUT FILE ================== */
+if(inputFileEl){
+  inputFileEl.addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      fotoBase64 = ev.target.result;
+      previewEl.src = fotoBase64;
+      previewEl.style.display = "block";
+      try {
+        const resp = await fetch(fotoBase64);
+        fotoBlob = await resp.blob();
+      } catch(e){ console.error("Erro convertendo base64->blob", e); }
+    };
+    reader.readAsDataURL(file);
+  }, false);
+}
 
-  setTimeout(() => {
-  alert("lojaUser = " + lojaUser);
-  alert("lojaURL = " + lojaURL);
-  alert("lojaAtual = " + lojaAtual);
-}, 1500);
-
+/* ================== AUTH & LOJA LOGIC ================== */
+onAuthStateChanged(auth, async (user) => {
   if(!user) return location.href = "index.html";
 
-  const snap = await getDoc(doc(db,"usuarios",user.email));
-  if(!snap.exists()){ alert("Perfil não encontrado."); return location.href="index.html"; }
+  // fetch perfil
+  let snap;
+  try {
+    snap = await getDoc(doc(db, "usuarios", user.email));
+  } catch(e){
+    console.error("Erro getDoc usuario:", e);
+    alert("Erro ao carregar perfil. Veja console.");
+    return location.href = "index.html";
+  }
+  if(!snap.exists()){
+    alert("Perfil não encontrado."); return location.href = "index.html";
+  }
 
   const cargo = snap.data().cargo || "gerente";
-  const lojaUser = snap.data().loja;
+  const lojaUser = snap.data().loja || null;
 
-  if(cargo!="responsavel" && cargo!="gerente" && cargo!="master"){
-    alert("Sem permissão."); return location.href="dashboard.html";
+  // permission check
+  if(cargo !== "responsavel" && cargo !== "gerente" && cargo !== "master"){
+    alert("Você não tem permissão para acessar esta página.");
+    return location.href = "dashboard.html";
   }
 
-  if(cargo==="responsavel"){
-    lojaAtual = lojasValidas.includes(lojaURL) ? lojaURL : (localStorage.getItem("lastSelectedLoja") || lojaUser);
-    selectLojaInline.style.display="inline-block";
-    selectLojaInline.value = lojaAtual;
-    selectLojaInline.onchange = ()=>{
-      const nova = selectLojaInline.value;
-      localStorage.setItem("lastSelectedLoja",nova);
-      window.location.search = `?loja=${nova}${produtoId?`&id=${produtoId}`:""}`;
-    };
+  // define lojaAtual com prioridade: (1) lojaURL (apenas se responsavel), (2) lastSelectedLoja, (3) lojaUser
+  if(cargo === "responsavel"){
+    // prefer URL if válida
+    if(lojaURL && lojasValidas.includes(lojaURL)){
+      lojaAtual = lojaURL;
+    } else {
+      const last = localStorage.getItem("lastSelectedLoja");
+      lojaAtual = last && lojasValidas.includes(last) ? last : (lojaUser && lojasValidas.includes(lojaUser) ? lojaUser : lojasValidas[0]);
+    }
+    // show select and set handlers
+    if(selectLojaInline){
+      selectLojaInline.style.display = "inline-block";
+      selectLojaInline.value = lojaAtual || lojasValidas[0];
+      selectLojaInline.onchange = ()=>{
+        const nova = selectLojaInline.value;
+        localStorage.setItem("lastSelectedLoja", nova);
+        // reload with loja param to keep behavior consistent
+        const params = new URLSearchParams(window.location.search);
+        params.set("loja", nova);
+        if(produtoId) params.set("id", produtoId);
+        window.location.search = params.toString();
+      };
+    }
   } else {
-    lojaAtual = lojaUser;
-    selectLojaInline.style.display="none";
+    // gerente/master -> force lojaUser (if exists)
+    lojaAtual = lojaUser || localStorage.getItem("lastSelectedLoja") || lojasValidas[0];
+    if(selectLojaInline) selectLojaInline.style.display = "none";
+    if(lojaURL && lojaURL !== lojaUser){
+      console.warn("Parâmetro ?loja= ignorado para seu cargo.");
+    }
   }
 
-  /* Carregar produto para edição */
+  // final safety: if lojaAtual not in valid list, pick default
+  if(!lojasValidas.includes(lojaAtual)) lojaAtual = lojasValidas[0];
+
+  console.log("lojaUser:", lojaUser, "lojaURL:", lojaURL, "lojaAtual:", lojaAtual, "cargo:", cargo);
+
+  // carregar produto se editando
   if(produtoId){
-    const pSnap = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`));
-    if(pSnap.exists()){
-      let p = pSnap.data();
-      nomeEl.value = p.nome;
-      codigoEl.value = p.codigo;
-      loteEl.value = p.lote;
-      precoEl.value = p.preco;
-      setorEl.value = p.setor;
-      validadeEl.value = p.dataValidadeISO;
-      document.getElementById("quantidade").value = p.quantidade || 0;
-
-      if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display="block"; }
-
-      document.getElementById("tituloPaginaTexto").textContent = "Editar Produto";
-      document.getElementById("btnSalvar").textContent="Salvar Alterações";
+    try{
+      const pSnap = await getDoc(doc(db, `lojas/${lojaAtual}/produtos/${produtoId}`));
+      if(pSnap.exists()){
+        const p = pSnap.data();
+        nomeEl.value = p.nome || "";
+        codigoEl.value = p.codigo || "";
+        loteEl.value = p.lote || "";
+        precoEl.value = p.preco || "";
+        setorEl.value = p.setor || "Outros";
+        validadeEl.value = p.dataValidadeISO || "";
+        quantidadeEl.value = p.quantidade ?? 0;
+        if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display = "block"; }
+        document.getElementById("tituloPaginaTexto").textContent = "Editar Produto";
+        btnSalvarEl.textContent = "Salvar Alterações";
+      } else {
+        console.warn("Produto não encontrado nesta loja:", lojaAtual);
+      }
+    }catch(e){
+      console.error("Erro ao carregar produto:", e);
     }
   }
 });
 
 /* ================== SALVAR ================== */
-document.getElementById("btnSalvar").onclick = async ()=>{
-  if(cameraPreview.srcObject){ cameraPreview.srcObject.getTracks().forEach(t=>t.stop()); }
-  cameraPreview.style.display="none";
+if(btnSalvarEl){
+  btnSalvarEl.onclick = async ()=>{
+    try{
+      // close camera stream if open
+      try {
+        if(cameraPreview && cameraPreview.srcObject){
+          cameraPreview.srcObject.getTracks().forEach(t=>t.stop());
+          cameraPreview.srcObject = null;
+          cameraPreview.style.display = "none";
+        }
+      } catch(e){ /* ignore */ }
 
-  const nome = nomeEl.value.trim();
-  const codigo = codigoEl.value.trim();
-  const lote = loteEl.value.trim();
-  const preco = parsePrice(precoEl.value);
-  const quantidade = Number(document.getElementById("quantidade").value);
-  const setor = setorEl.value;
-  const iso = validadeEl.value;
+      const nome = nomeEl.value.trim();
+      const codigo = codigoEl.value.trim();
+      const lote = loteEl.value.trim();
+      const preco = parsePrice(precoEl.value);
+      const quantidade = Number(quantidadeEl.value || 0);
+      const setor = setorEl.value;
+      const iso = validadeEl.value;
 
-  if(!nome || !codigo || !lote || !iso){ alert("Preencha tudo."); return; }
+      if(!nome || !codigo || !lote || !iso){
+        alert("Preencha todos os campos obrigatórios.");
+        return;
+      }
 
-  const id = produtoId || crypto.randomUUID();
-  let fotoURL = "";
+      if(!lojaAtual){
+        alert("Loja não definida. Verifique usuário/seleção de loja.");
+        return;
+      }
 
-  try{
-    if(fotoBlob){
-      const refImg = ref(storage,`produtos/${lojaAtual}/${id}.jpg`);
-      await uploadBytes(refImg,fotoBlob);
-      fotoURL = await getDownloadURL(refImg);
-    } else if(produtoId){
-      const snapOld = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`));
-      fotoURL = snapOld.exists() ? (snapOld.data().fotoURL || "") : "";
+      const id = produtoId || crypto.randomUUID();
+      let fotoURL = "";
+
+      // upload foto se tiver
+      if(fotoBlob){
+        try{
+          const refImg = ref(storage, `produtos/${lojaAtual}/${id}.jpg`);
+          await uploadBytes(refImg, fotoBlob);
+          fotoURL = await getDownloadURL(refImg);
+        }catch(e){
+          console.error("Erro upload foto:", e);
+          alert("Erro ao enviar a foto. Veja console.");
+          return;
+        }
+      } else if(produtoId){
+        // manter foto antiga caso exista
+        try{
+          const oldSnap = await getDoc(doc(db, `lojas/${lojaAtual}/produtos/${produtoId}`));
+          fotoURL = oldSnap.exists() ? (oldSnap.data().fotoURL || "") : "";
+        }catch(e){ console.error("Erro ler foto antiga:", e); }
+      }
+
+      // salvar produto
+      try{
+        await setDoc(doc(db, `lojas/${lojaAtual}/produtos/${id}`), {
+          nome,
+          codigo,
+          lote,
+          preco,
+          quantidade,
+          setor,
+          dataValidadeISO: iso,
+          dataValidadeBR: convBR(iso),
+          fotoURL,
+          status: "normal",
+          alertaCor: "normal",
+          alert5diasSent: false,
+          criadoEm: produtoId ? undefined : new Date(),
+          atualizadoEm: new Date()
+        }, { merge: true });
+      }catch(e){
+        console.error("Erro setDoc produto:", e);
+        alert("Erro ao salvar produto. Veja console.");
+        return;
+      }
+
+      alert("Produto salvo com sucesso!");
+      window.location.href = "Lista-produtos.html";
+    }catch(err){
+      console.error("Erro btnSalvar:", err);
+      alert("Erro inesperado. Veja console.");
     }
-  }catch(e){ alert("Erro ao enviar foto."); return; }
-
-  try {
-    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
-    nome,codigo,lote,preco,quantidade,setor,
-    dataValidadeISO:iso,
-    dataValidadeBR:convBR(iso),
-    fotoURL,
-    status:"normal",
-    alertaCor:"normal",
-    alert5diasSent:false,
-    criadoEm: produtoId? undefined : new Date(),
-    atualizadoEm:new Date()
-  },{ merge:true });
-
-  alert("Produto salvo!");
-  location.href="Lista-produtos.html";
-  } catch(err) {
-    alert("Erro ao salvar produto: " + err.message);
-    console.error(err);
-  }
-};
+  };
+}
 
 /* ================== LIMPAR ================== */
-document.getElementById("btnLimpar").onclick = ()=>{
-  formProduto.reset();
-  previewEl.style.display="none";
-  stopScanner();
-  fotoBlob = null;
-};
+if(btnLimparEl){
+  btnLimparEl.onclick = ()=>{
+    try{
+      formProduto.reset();
+      if(previewEl) previewEl.style.display = "none";
+      fotoBlob = null;
+      stopScanner();
+    }catch(e){ console.error("Erro limpar:", e); }
+  };
+}
 
-/* ================== IMPORTAÇÃO EXCEL ================== */
-/* (Restante das funções de Excel exatamente como seu original) */
+/* ================== IMPORT EXCEL (mantive sua lógica mas sem alterações drásticas) ================== */
+/* Coloque aqui suas funções de import / preview / saveAll exatamente como tinham no original. */
 
-/* ================== FIM DO SCRIPT ================== */
 </script>
+
+
+
+
+
 <script>
 /* Este script controla o menu hamburger */
 const btnMenu = document.getElementById("btnMenu");
