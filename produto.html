@@ -105,7 +105,7 @@ button { padding:10px 12px; border-radius:8px; border:none; cursor:pointer }
     </form>
 
     <div style="margin-top:18px">
-      <button id="importExcelBtn">Importar Excel</button>
+      <button id="btnImportarExcel">Importar Excel</button>
       <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none">
     </div>
 
@@ -135,7 +135,7 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* ============== CONFIG CLOUDINARY ============== */
+/* ============== CONFIG CLOUDINARY  ============== */
 const CLOUDINARY_CLOUD = "dnfvzp3vu";          // seu cloud name
 const CLOUDINARY_PRESET = "valitec_upload";    // seu upload preset (unsigned)
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
@@ -241,7 +241,7 @@ if(btnCapturar) btnCapturar.onclick = async ()=>{
   fotoBlob = await (await fetch(dataURL)).blob();
 };
 
-/* ================== INPUT ARQUIVO ================== */
+/* ================== INPUT ARQUIVO ;================== */
 if(inputFileEl) inputFileEl.onchange = async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -434,7 +434,7 @@ document.getElementById("btnLimpar").onclick = ()=>{
 </script>
 <script>
 /* === IMPORTAR EXCEL === */
-const excelBtn=document.getElementById("importExcelBtn");
+const excelBtn=document.getElementById("btnImportarExcel");
 const excelInput=document.getElementById("excelInput");
 const excelModal=document.getElementById("excelModal");
 const excelClose=document.getElementById("closeExcelModal");
