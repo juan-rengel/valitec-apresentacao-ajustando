@@ -116,10 +116,10 @@ button { padding:10px 12px; border-radius:8px; border:none; cursor:pointer }
 <script src="https://unpkg.com/@zxing/browser@0.1.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const app = initializeApp({
@@ -132,142 +132,289 @@ const app = initializeApp({
 });
 
 const db = getFirestore(app);
-const storage = getStorage(app);
 const auth = getAuth(app);
 
-/* ===== Vars/UI ===== */
+/* ============== CONFIG CLOUDINARY ============== */
+const CLOUDINARY_CLOUD = "dnfvzp3vu";          // seu cloud name
+const CLOUDINARY_PRESET = "valitec_upload";    // seu upload preset (unsigned)
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`;
+
+/* ================== VARIÁVEIS GERAIS ================== */
 const lojasValidas = ["loja_cd_cidade","loja_cidade","loja_terranova","loja_manoa","loja_zumbi","loja_oswaldo","loja_mosaico"];
-const friendly = { loja_cd_cidade:"CD Cidade", loja_cidade:"Cidade Nova", loja_terranova:"Terra Nova", loja_manoa:"Manoa", loja_zumbi:"Zumbi", loja_oswaldo:"Oswaldo", loja_mosaico:"Mosaico" };
+const friendly = {
+  loja_cd_cidade: "CD Cidade",
+  loja_cidade: "Cidade Nova",
+  loja_terranova: "Terra Nova",
+  loja_manoa: "Manoa",
+  loja_zumbi: "Zumbi",
+  loja_oswaldo: "Oswaldo",
+  loja_mosaico: "Mosaico"
+};
+
 const urlParams = new URLSearchParams(window.location.search);
-const lojaURL = urlParams.get('loja');
+const lojaURL = urlParams.get("loja");
 let lojaAtual = null;
-let produtoId = urlParams.get('id');
-let fotoBlob = null;
+let produtoId = urlParams.get("id");
+let fotoBlob = null;      // Blob que será enviado ao Cloudinary
+let fotoBase64 = null;    // para preview (opcional)
+let codeReader = null;
+let scannerActive = false;
 
-/* Elements */
-const selectLojaInline = document.getElementById('selectLojaInline');
-const nomeEl = document.getElementById('nome');
-const codigoEl = document.getElementById('codigo');
-const loteEl = document.getElementById('lote');
-const precoEl = document.getElementById('preco');
-const quantidadeEl = document.getElementById('quantidade');
-const setorEl = document.getElementById('setor');
-const validadeEl = document.getElementById('validade');
-const previewEl = document.getElementById('previewFoto');
-const inputFileEl = document.getElementById('foto');
-const cameraPreview = document.getElementById('cameraPreview');
-const btnOpenCamera = document.getElementById('btnOpenCamera');
-const btnCapturar = document.getElementById('btnCapturar');
-const btnOpenFile = document.getElementById('btnOpenFile');
-const scannerPreview = document.getElementById('scannerPreview');
+/* ================== ELEMENTOS ================== */
+const nomeEl = document.getElementById("nome");
+const codigoEl = document.getElementById("codigo");
+const loteEl = document.getElementById("lote");
+const precoEl = document.getElementById("preco");
+const setorEl = document.getElementById("setor");
+const validadeEl = document.getElementById("validade");
+const previewEl = document.getElementById("previewFoto");
+const inputFileEl = document.getElementById("foto");
+const scannerPreview = document.getElementById("scannerPreview");
+const selectLojaInline = document.getElementById("selectLojaInline");
+const cameraPreview = document.getElementById("cameraPreview");
+const btnOpenCamera = document.getElementById("btnOpenCamera");
+const btnCapturar = document.getElementById("btnCapturar");
 
-/* Build loja select */
-lojasValidas.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = friendly[l] || l; selectLojaInline.appendChild(o); });
+/* ================== HELPERS ================== */
+function parsePrice(v){ return Number(String(v).replace(".","").replace(",",".")) || 0; }
+function convISO(br){ if(!br) return ""; if(br.includes("/")){ let[dd,mm,yy]=br.split("/"); return `${yy}-${mm}-${dd}`; } return br; }
+function convBR(iso){ if(!iso) return ""; let[y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; }
 
-/* scanner */
-let codeReader = null; let scannerActive = false;
-function startScanner(){ if(scannerActive) return; if(!window.ZXing) return alert('Scanner não disponível'); codeReader = new ZXing.BrowserMultiFormatReader(); scannerActive=true; scannerPreview.style.display='block'; codeReader.decodeFromVideoDevice(null, scannerPreview, (result)=>{ if(result){ codigoEl.value = result.text; stopScanner(); } }); }
-function stopScanner(){ if(!scannerActive) return; scannerActive=false; try{ codeReader.reset(); }catch(e){} scannerPreview.style.display='none'; }
-document.getElementById('btnScan').onclick = ()=> { if(scannerActive) stopScanner(); else startScanner(); };
-
-/* camera capture */
-btnOpenCamera.onclick = async () => {
-  try{ const s = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } }); cameraPreview.srcObject = s; cameraPreview.style.display='block'; btnCapturar.style.display='inline-block'; }catch(e){ alert('Erro ao abrir câmera: ' + (e.message||e)); }
-}
-btnCapturar.onclick = async ()=>{
-  await new Promise(r => setTimeout(r,500));
-  if(!cameraPreview.videoWidth) return alert('Câmera carregando...');
-  const canvas = document.createElement('canvas'); canvas.width = cameraPreview.videoWidth; canvas.height = cameraPreview.videoHeight; const ctx = canvas.getContext('2d'); ctx.drawImage(cameraPreview,0,0); const dataUrl = canvas.toDataURL('image/jpeg',0.9); previewEl.src = dataUrl; previewEl.style.display='block'; fotoBlob = await (await fetch(dataUrl)).blob();
+/* ================== POPULA SELECT LOJAS ================== */
+if (selectLojaInline) {
+  lojasValidas.forEach(l=>{
+    const o=document.createElement("option");
+    o.value=l;
+    o.textContent=friendly[l] || l;
+    selectLojaInline.appendChild(o);
+  });
 }
 
-/* choose file */
-btnOpenFile.onclick = ()=> inputFileEl.click();
-inputFileEl.onchange = async (e)=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = async ev => { previewEl.src = ev.target.result; previewEl.style.display='block'; fotoBlob = await (await fetch(ev.target.result)).blob(); }; r.readAsDataURL(f); };
+/* ================== SCANNER (ZXing) ================== */
+function startScanner(){
+  if(scannerActive) return;
+  if(!window.ZXing) return alert("Scanner não disponível neste dispositivo.");
+  codeReader = new ZXing.BrowserMultiFormatReader();
+  scannerActive = true;
+  scannerPreview.style.display = "block";
+  codeReader.decodeFromVideoDevice(null, scannerPreview, result => {
+    if(result){ codigoEl.value = result.text; stopScanner(); }
+  });
+}
+function stopScanner(){
+  scannerActive = false;
+  if(codeReader){ try{ codeReader.reset(); }catch(e){} }
+  if(scannerPreview) scannerPreview.style.display = "none";
+}
+const btnScan = document.getElementById("btnScan");
+if(btnScan) btnScan.onclick = ()=>{ if(scannerActive) stopScanner(); else startScanner(); };
 
-/* helpers */
-function parsePrice(v){ if(!v) return 0; return Number(String(v).replace('.', '').replace(',', '.')) || 0; }
-function convBR(iso){ if(!iso) return ''; const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+/* ================== CÂMERA ================== */
+if(btnOpenCamera) btnOpenCamera.onclick = async ()=>{
+  try{
+    let stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" } });
+    cameraPreview.srcObject = stream;
+    cameraPreview.style.display = "block";
+    btnCapturar.style.display = "inline-block";
+  }catch(e){ alert("Erro ao acessar câmera: " + (e.message || e)); }
+};
 
-/* ================= AUTH & Loja logic ================= */
-onAuthStateChanged(auth, async user => {
-  if(!user) return location.href = 'index.html';
-  const snap = await getDoc(doc(db,'usuarios',user.email));
-  if(!snap.exists()){ alert('Perfil não encontrado'); return location.href='index.html'; }
-  const cargo = snap.data().cargo || 'gerente';
+if(btnCapturar) btnCapturar.onclick = async ()=>{
+  await new Promise(r=>setTimeout(r,700));
+  if(!cameraPreview.videoWidth){ alert("Câmera carregando, tente novamente."); return; }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = cameraPreview.videoWidth;
+  canvas.height = cameraPreview.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(cameraPreview,0,0);
+  const dataURL = canvas.toDataURL("image/jpeg",0.9);
+
+  previewEl.src = dataURL;
+  previewEl.style.display = "block";
+
+  fotoBlob = await (await fetch(dataURL)).blob();
+};
+
+/* ================== INPUT ARQUIVO ================== */
+if(inputFileEl) inputFileEl.onchange = async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    fotoBase64 = ev.target.result;
+    previewEl.src = fotoBase64;
+    previewEl.style.display="block";
+    fotoBlob = await (await fetch(fotoBase64)).blob();
+  };
+  reader.readAsDataURL(file);
+};
+
+/* ================== UPLOAD CLOUDINARY ================== */
+async function uploadToCloudinary(blob, publicIdPrefix){
+  if(!blob) throw new Error("Nenhum arquivo para enviar.");
+  const fd = new FormData();
+  fd.append("file", blob);
+  fd.append("upload_preset", CLOUDINARY_PRESET);
+  // public_id opcional: usamos prefix/uuid para organizar por loja
+  if(publicIdPrefix) fd.append("public_id", publicIdPrefix);
+  // permitir retorno em JSON
+  const res = await fetch(CLOUDINARY_UPLOAD_URL, { method: "POST", body: fd });
+  if(!res.ok){
+    const txt = await res.text().catch(()=>"");
+    throw new Error("Cloudinary upload falhou: " + res.status + " " + txt);
+  }
+  const json = await res.json();
+  return json; // contém secure_url, public_id, etc
+}
+
+/* ================== AUTENTICAÇÃO E CONTEXTO DA LOJA ================== */
+onAuthStateChanged(auth, async user=>{
+  if(!user) return location.href = "index.html";
+
+  const snap = await getDoc(doc(db,"usuarios",user.email));
+  if(!snap.exists()){ alert("Perfil não encontrado."); return location.href="index.html"; }
+
+  const cargo = snap.data().cargo || "gerente";
   const lojaUser = snap.data().loja;
 
-  if(cargo === 'responsavel'){
-    lojaAtual = lojasValidas.includes(lojaURL) ? lojaURL : (localStorage.getItem('lastSelectedLoja') || lojaUser);
-    selectLojaInline.style.display='inline-block'; selectLojaInline.value = lojaAtual;
-    selectLojaInline.onchange = ()=>{ lojaAtual = selectLojaInline.value; localStorage.setItem('lastSelectedLoja', lojaAtual); window.location.search = `?loja=${lojaAtual}${produtoId?`&id=${produtoId}`:''}` }
-  } else {
-    lojaAtual = lojaUser; selectLojaInline.style.display='none';
-    if(lojaURL && lojaURL !== lojaUser) console.warn('Parametro ?loja= ignorado para este cargo.');
+  // Permissões: somente responsavel/gerente/master podem acessar
+  if(cargo!="responsavel" && cargo!="gerente" && cargo!="master"){
+    alert("Sem permissão para acessar esta página."); return location.href="dashboard.html";
   }
 
-  // carregar produto para edição se houver
-  if(produtoId){ try{ const pSnap = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`)); if(pSnap.exists()){ const p = pSnap.data(); nomeEl.value = p.nome || ''; codigoEl.value = p.codigo || ''; loteEl.value = p.lote || ''; precoEl.value = p.preco || ''; setorEl.value = p.setor || 'Outros'; validadeEl.value = p.dataValidadeISO || ''; quantidadeEl.value = p.quantidade ?? 0; if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display='block'; } document.getElementById('tituloPaginaTexto').textContent = 'Editar Produto'; document.getElementById('btnSalvar').textContent = 'Salvar Alterações'; } }catch(e){ console.error('Erro carregar produto', e); }
+  // Definir lojaAtual e UI do select
+  if(cargo==="responsavel"){
+    lojaAtual = lojasValidas.includes(lojaURL) ? lojaURL : (localStorage.getItem("lastSelectedLoja") || lojaUser);
+    if(selectLojaInline){
+      selectLojaInline.style.display = "inline-block";
+      selectLojaInline.value = lojaAtual;
+      selectLojaInline.onchange = ()=>{
+        const nova = selectLojaInline.value;
+        localStorage.setItem("lastSelectedLoja",nova);
+        // recarrega mantendo id se existir
+        const params = new URLSearchParams(window.location.search);
+        if(produtoId) params.set("id", produtoId);
+        params.set("loja", nova);
+        window.location.search = params.toString();
+      };
+    }
+  } else {
+    lojaAtual = lojaUser;
+    if(selectLojaInline) selectLojaInline.style.display = "none";
+  }
+
+  // Carregar produto para edição (se aplicável)
+  if(produtoId){
+    try{
+      const pSnap = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`));
+      if(pSnap.exists()){
+        const p = pSnap.data();
+        nomeEl.value = p.nome || "";
+        codigoEl.value = p.codigo || "";
+        loteEl.value = p.lote || "";
+        precoEl.value = p.preco || "";
+        setorEl.value = p.setor || "";
+        validadeEl.value = p.dataValidadeISO || "";
+        document.getElementById("quantidade").value = p.quantidade ?? 0;
+        if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display = "block"; }
+        document.getElementById("tituloPaginaTexto")?.textContent = "Editar Produto";
+        document.getElementById("btnSalvar")?.textContent = "Salvar Alterações";
+      } else {
+        // produto não encontrado — pode ser em outra loja
+        // console.warn("Produto não encontrado na loja atual.");
+      }
+    }catch(e){
+      console.error("Erro ao carregar produto:", e);
+    }
   }
 });
 
-/* ================= SALVAR ================= */
-document.getElementById('btnSalvar').onclick = async ()=>{
+/* ================== SALVAR PRODUTO (usa Cloudinary) ================== */
+document.getElementById("btnSalvar").onclick = async ()=>{
+  // Fecha a câmera se aberta
+  try{ if(cameraPreview.srcObject){ cameraPreview.srcObject.getTracks().forEach(t=>t.stop()); cameraPreview.srcObject = null; } }catch(e){}
+  cameraPreview.style.display="none";
+
+  const nome = nomeEl.value.trim();
+  const codigo = codigoEl.value.trim();
+  const lote = loteEl.value.trim();
+  const preco = parsePrice(precoEl.value);
+  const quantidade = Number(document.getElementById("quantidade").value || 0);
+  const setor = setorEl.value;
+  const iso = validadeEl.value;
+
+  if(!nome || !codigo || !lote || !iso){
+    alert("Preencha todos os campos obrigatórios (nome, código, lote, validade).");
+    return;
+  }
+
+  if(!lojaAtual){
+    alert("Loja não definida. Verifique seu perfil e a seleção de loja.");
+    return;
+  }
+
+  const id = produtoId || crypto.randomUUID();
+  let fotoURL = "";
+
+  // Se houver fotoBlob, faz upload ao Cloudinary
   try{
-    // stop camera if open
-    if(cameraPreview.srcObject) { cameraPreview.srcObject.getTracks().forEach(t=>t.stop()); cameraPreview.style.display='none'; }
-
-    const nome = nomeEl.value.trim(); const codigo = codigoEl.value.trim(); const lote = loteEl.value.trim();
-    const preco = parsePrice(precoEl.value); const quantidade = Number(quantidadeEl.value || 0); const setor = setorEl.value; const iso = validadeEl.value;
-
-    if(!nome || !codigo || !lote || !iso){ alert('Preencha todos os campos obrigatórios.'); return; }
-    if(!lojaAtual){ alert('Loja não selecionada.'); return; }
-
-    const id = produtoId || crypto.randomUUID(); let fotoURL = '';
-
     if(fotoBlob){
-      const refImg = ref(storage, `produtos/${lojaAtual}/${id}.jpg`);
-      await uploadBytes(refImg, fotoBlob);
-      fotoURL = await getDownloadURL(refImg);
+      // Monta public_id para organizar: lojaAtual/<id>
+      const publicId = `${lojaAtual}/${id}`;
+      const uploaded = await uploadToCloudinary(fotoBlob, publicId);
+      fotoURL = uploaded.secure_url || uploaded.url || "";
     } else if(produtoId){
-      const old = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`)); if(old.exists()) fotoURL = old.data().fotoURL || '';
+      // editar sem nova foto: mantém foto anterior (se existir)
+      const snapOld = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`));
+      fotoURL = snapOld.exists() ? (snapOld.data().fotoURL || "") : "";
+    } else {
+      // novo produto sem foto: deixa vazio
+      fotoURL = "";
     }
-    if (fotoBlob) {
-  fotoURL = await uploadToCloudinary(fotoBlob);
-}
+  }catch(e){
+    console.error("Erro upload Cloudinary:", e);
+    alert("Erro ao enviar foto. Veja console.");
+    // Não interrompe necessariamente o salvamento se você quiser forçar sem foto:
+    return;
+  }
 
-    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
-      nome, codigo, lote, preco, quantidade, setor,
+  // Salva no Firestore
+  try{
+    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`), {
+      nome,
+      codigo,
+      lote,
+      preco,
+      quantidade,
+      setor,
       dataValidadeISO: iso,
       dataValidadeBR: convBR(iso),
-      fotoURL, status: 'normal', alertaCor: 'normal', alert5diasSent: false,
-      criadoEm: produtoId? undefined : new Date(), atualizadoEm: new Date()
+      fotoURL,
+      status: "normal",
+      alertaCor: "normal",
+      alert5diasSent: false,
+      criadoEm: produtoId ? undefined : new Date(),
+      atualizadoEm: new Date()
     }, { merge: true });
 
-    alert('Produto salvo!'); location.href = 'Lista-produtos.html';
-  }catch(err){ console.error(err); alert('Erro ao salvar: ' + (err.message || err)); }
+    alert("Produto salvo com sucesso!");
+    location.href = "Lista-produtos.html";
+  }catch(err){
+    console.error("Erro ao salvar produto:", err);
+    alert("Erro ao salvar produto. Veja console.");
+  }
 };
 
-/* limpar */
-document.getElementById('btnLimpar').onclick = ()=>{ document.getElementById('formProduto').reset(); previewEl.style.display='none'; fotoBlob = null; stopScanner(); }
-
-/* ================ Excel import ================= */
-const excelBtn = document.getElementById('importExcelBtn'); const excelInput = document.getElementById('excelInput'); const excelModal = document.getElementById('excelModal'); const tableBody = document.querySelector('#excelTable tbody'); const closeExcelModal = document.getElementById('closeExcelModal'); const saveAll = document.getElementById('saveAllLines');
-
-excelBtn.onclick = ()=> excelInput.click();
-excelInput.onchange = (e)=>{ const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = (ev)=>{ try{ const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const sheet = wb.Sheets[wb.SheetNames[0]]; const json = XLSX.utils.sheet_to_json(sheet, { defval: '' }); renderExcelPreview(json); excelModal.style.display='flex'; }catch(err){ alert('Erro ler Excel: ' + err.message) } }; r.readAsArrayBuffer(f); }
-
-function renderExcelPreview(list){ tableBody.innerHTML=''; list.forEach(item=>{ const nome = item.nome || item.Nome || ''; const cod = item.codigo || item.Código || item.Codigo || ''; const lote = item.lote || ''; const val = item.validade || item.Validade || ''; const pr = item.preco || item.Preço || ''; const forn = item.fornecedor || item.Fornecedor || ''; const tr = document.createElement('tr'); tr.innerHTML = `<td>${nome}</td><td>${cod}</td><td>${lote}</td><td>${val}</td><td>${pr}</td><td>${forn}</td><td><button class='useLine'>Usar</button></td>`; tableBody.appendChild(tr); tr.querySelector('.useLine').onclick = ()=>{ nomeEl.value = nome; codigoEl.value = cod; loteEl.value = lote; if(val.includes('/')){ const [d,m,y] = val.split('/'); validadeEl.value = `${y}-${m}-${d}` } else { validadeEl.value = val } precoEl.value = pr; excelModal.style.display='none'; } }); }
-closeExcelModal.onclick = ()=> excelModal.style.display='none';
-
-saveAll.onclick = async ()=>{
-  const rows = Array.from(document.querySelectorAll('#excelTable tbody tr'));
-  if(rows.length===0){ alert('Nada a salvar'); return; }
-  let ok=0, fail=0;
-  for(const r of rows){ const nome = r.cells[0].innerText.trim(); const cod = r.cells[1].innerText.trim(); const lote = r.cells[2].innerText.trim(); const val = r.cells[3].innerText.trim(); const pr = parsePrice(r.cells[4].innerText.trim()); const forn = r.cells[5].innerText.trim(); if(!nome||!cod||!lote||!val){ fail++; continue; } const iso = val.includes('/') ? val.split('/').reverse().join('-') : val; try{ await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${crypto.randomUUID()}`),{ nome, codigo: cod, lote, preco: pr, fornecedor: forn||'', setor:'Outros', dataValidadeISO: iso, dataValidadeBR: val.includes('/')? val : convBR(iso), fotoURL:'', status:'normal', alertaCor:'normal', alert5diasSent:false, criadoEm: new Date() }); ok++; }catch(e){ console.error('erro saveAll', e); fail++; } }
-  alert('Enviados: ' + ok + ' | Falhas: ' + fail); excelModal.style.display='none';
-}
-
+/* ================== LIMPAR FORM ================== */
+document.getElementById("btnLimpar").onclick = ()=>{
+  try{ formProduto.reset(); }catch(e){}
+  previewEl.style.display="none";
+  stopScanner();
+  fotoBlob = null;
+};
 </script>
+
 
 <script>
 /* hamburger */
