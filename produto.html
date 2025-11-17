@@ -28,6 +28,7 @@ button { padding:10px 12px; border-radius:8px; border:none; cursor:pointer }
 @media(max-width:900px){ .hamburger{ display:block } .sidebar{ position:fixed; left:-260px; top:0; height:100vh } .sidebar.open{ left:0 } }
 #excelModal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:9999 }
 #excelModal .card{ background:#071322; padding:16px; border-radius:10px; width:95%; max-width:980px }
+
 </style>
 </head>
 <body>
@@ -56,10 +57,10 @@ button { padding:10px 12px; border-radius:8px; border:none; cursor:pointer }
       <input type="text" id="nome" required>
 
       <label>Código de Barras</label>
-      <div class="form-row" style="display:flex;gap:8px;align-items:center">
-        <input type="text" id="codigo" placeholder="Aguardando leitura..." required style="flex:1">
-        <button type="button" id="btnScan">📷 Ler</button>
-      </div>
+<div class="form-row">
+  <input type="text" id="codigo" placeholder="Aguardando leitura..." required>
+  <button type="button" id="btnScan">📷 Ler</button>
+</div>
       <video id="scannerPreview" ></video>
 
       <label>Lote</label>
