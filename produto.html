@@ -428,12 +428,135 @@ document.getElementById("btnLimpar").onclick = ()=>{
   stopScanner();
   fotoBlob = null;
 };
-</script>
 
+
+
+</script>
+<script>
+/* === IMPORTAR EXCEL === */
+const excelBtn=document.getElementById("importExcelBtn");
+const excelInput=document.getElementById("excelInput");
+const excelModal=document.getElementById("excelModal");
+const excelClose=document.getElementById("closeExcelModal");
+const tableBody=document.querySelector("#excelTable tbody");
+const saveAll=document.getElementById("saveAllLines");
+
+excelBtn.onclick=()=>excelInput.click();
+
+excelInput.onchange=(e)=>{
+  let file=e.target.files[0]; if(!file)return;
+  let reader=new FileReader();
+  reader.onload=(evt)=>{
+    let wb=XLSX.read(new Uint8Array(evt.target.result),{type:"array"});
+    let sheet=wb.Sheets[wb.SheetNames[0]];
+    let json=XLSX.utils.sheet_to_json(sheet,{defval:""});
+    carregarTabela(json);
+    excelModal.style.display="flex";
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+function carregarTabela(lista){
+  tableBody.innerHTML="";
+  lista.forEach(item=>{
+    const nome=item.nome||item.Nome||"";
+    const cod=item.codigo||item.Código||"";
+    const lote=item.lote||"";
+    const val=item.validade||item.Validade||"";
+    const pr=item.preco||"";
+    const forn=item.fornecedor||"";
+
+    let tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${nome}</td>
+      <td>${cod}</td>
+      <td>${lote}</td>
+      <td>${val}</td>
+      <td>${pr}</td>
+      <td>${forn}</td>
+      <td><button class="useLine">Usar</button></td>
+    `;
+    tableBody.appendChild(tr);
+
+    tr.querySelector(".useLine").onclick = () => {
+  document.getElementById("nome").value = nome;
+  document.getElementById("codigo").value = cod;
+  document.getElementById("lote").value = lote;
+
+  // Ajuste da data dd/mm/yyyy → yyyy-mm-dd
+  if (val.includes("/")) {
+    let [d, m, y] = val.split("/");
+    document.getElementById("validade").value =
+      `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  } else {
+    document.getElementById("validade").value = val;
+  }
+
+  document.getElementById("preco").value = pr;
+
+  // Fecha o modal
+  excelModal.style.display = "none";
+};
+  });
+}
+
+excelClose.onclick=()=>excelModal.style.display="none";
+
+saveAll.onclick=async()=>{
+  let rows=document.querySelectorAll("#excelTable tbody tr");
+  if(rows.length===0){alert("Nada a salvar.");return;}
+
+  let ok=0,fail=0;
+  for(let r of rows){
+    let nome=r.cells[0].innerText.trim();
+    let cod=r.cells[1].innerText.trim();
+    let lote=r.cells[2].innerText.trim();
+    let val=r.cells[3].innerText.trim();
+    let pr=parsePrice(r.cells[4].innerText.trim());
+    let forn=r.cells[5].innerText.trim();
+
+    if(!nome||!cod||!lote||!val){fail++;continue;}
+
+    let iso=convISO(val);
+    await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${crypto.randomUUID()}`),{
+      nome,codigo:cod,lote,preco:pr,fornecedor:forn||"",
+      setor:"Outros",
+      dataValidadeISO:iso,
+      dataValidadeBR:convBR(iso),
+      fotoURL:"",
+      status:"normal",
+      alertaCor:"normal",
+      alert5diasSent:false,
+      criadoEm:new Date()
+    });
+    ok++;
+  }
+  alert("Enviados: "+ok+" | Falhas: "+fail);
+  excelModal.style.display="none";
+};
+</script>
 
 <script>
 /* hamburger */
 const btnMenu = document.getElementById('btnMenu'); const sidebarMenu = document.getElementById('sidebarMenu'); btnMenu.onclick = ()=> sidebarMenu.classList.toggle('open');
+</script>
+
+
+<button id="toggleTheme" class="theme-toggle">🌙</button>
+<script>
+const toggle=document.getElementById("toggleTheme");
+function aplicaTema(){
+  let t=localStorage.getItem("temaValitec")||"dark";
+  if(t==="light"){document.documentElement.classList.add("light-mode");toggle.textContent="🌙";}
+  else{document.documentElement.classList.remove("light-mode");toggle.textContent="🔆";}
+}
+toggle.onclick=()=>{
+  let t=localStorage.getItem("temaValitec")||"dark";
+  let n=t==="dark"?"light":"dark";
+  localStorage.setItem("temaValitec",n);
+  aplicaTema();
+};
+aplicaTema();
 </script>
 </body>
 </html>

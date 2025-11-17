@@ -220,22 +220,3 @@ aplicarTema();
 </html>
 
 
-
-
-
-<button id="toggleTheme" class="theme-toggle">🌙</button>
-<script>
-const toggle=document.getElementById("toggleTheme");
-function aplicaTema(){
-  let t=localStorage.getItem("temaValitec")||"dark";
-  if(t==="light"){document.documentElement.classList.add("light-mode");toggle.textContent="🌙";}
-  else{document.documentElement.classList.remove("light-mode");toggle.textContent="🔆";}
-}
-toggle.onclick=()=>{
-  let t=localStorage.getItem("temaValitec")||"dark";
-  let n=t==="dark"?"light":"dark";
-  localStorage.setItem("temaValitec",n);
-  aplicaTema();
-};
-aplicaTema();
-</script>
