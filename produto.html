@@ -174,6 +174,10 @@ const selectLojaInline = document.getElementById("selectLojaInline");
 const cameraPreview = document.getElementById("cameraPreview");
 const btnOpenCamera = document.getElementById("btnOpenCamera");
 const btnCapturar = document.getElementById("btnCapturar");
+const btnOpenFile = document.getElementById("btnOpenFile");
+const btnSalvar = document.getElementById("btnSalvar");
+const btnLimpar = document.getElementById("btnLimpar");
+const formProduto = document.getElementById("formProduto");
 
 /* ================== HELPERS ================== */
 function parsePrice(v){ return Number(String(v).replace(".","").replace(",",".")) || 0; }
@@ -249,6 +253,8 @@ if(inputFileEl) inputFileEl.onchange = async (e)=>{
   };
   reader.readAsDataURL(file);
 };
+
+if(btnOpenFile) btnOpenFile.onclick = ()=> inputFileEl.click();
 
 /* ================== UPLOAD CLOUDINARY ================== */
 async function uploadToCloudinary(blob, publicIdPrefix){
@@ -332,6 +338,10 @@ onAuthStateChanged(auth, async user=>{
 
 /* ================== SALVAR PRODUTO (usa Cloudinary) ================== */
 document.getElementById("btnSalvar").onclick = async ()=>{
+  // evita duplo clique
+  btnSalvar.disabled = true;
+  btnSalvar.textContent = "Enviando...";
+
   // Fecha a câmera se aberta
   try{ if(cameraPreview.srcObject){ cameraPreview.srcObject.getTracks().forEach(t=>t.stop()); cameraPreview.srcObject = null; } }catch(e){}
   cameraPreview.style.display="none";
@@ -346,12 +356,12 @@ document.getElementById("btnSalvar").onclick = async ()=>{
 
   if(!nome || !codigo || !lote || !iso){
     alert("Preencha todos os campos obrigatórios (nome, código, lote, validade).");
-    return;
+    btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Produto"; return;
   }
 
   if(!lojaAtual){
     alert("Loja não definida. Verifique seu perfil e a seleção de loja.");
-    return;
+    btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Produto"; return;
   }
 
   const id = produtoId || crypto.randomUUID();
@@ -375,8 +385,7 @@ document.getElementById("btnSalvar").onclick = async ()=>{
   }catch(e){
     console.error("Erro upload Cloudinary:", e);
     alert("Erro ao enviar foto. Veja console.");
-    // Não interrompe necessariamente o salvamento se você quiser forçar sem foto:
-    return;
+    btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Produto"; return;
   }
 
   // Salva no Firestore
@@ -403,6 +412,7 @@ document.getElementById("btnSalvar").onclick = async ()=>{
   }catch(err){
     console.error("Erro ao salvar produto:", err);
     alert("Erro ao salvar produto. Veja console.");
+    btnSalvar.disabled = false; btnSalvar.textContent = "Salvar Produto";
   }
 };
 
