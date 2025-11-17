@@ -502,6 +502,19 @@ function carregarTabela(lista){
 
 excelClose.onclick=()=>excelModal.style.display="none";
 
+
+function parsePrice(v) {
+  if (!v) return 0;
+  return parseFloat(
+    String(v)
+      .replace("R$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .trim()
+  ) || 0;
+}
+
+
 saveAll.onclick=async()=>{
   let rows=document.querySelectorAll("#excelTable tbody tr");
   if(rows.length===0){alert("Nada a salvar.");return;}
@@ -512,7 +525,7 @@ saveAll.onclick=async()=>{
     let cod=r.cells[1].innerText.trim();
     let lote=r.cells[2].innerText.trim();
     let val=r.cells[3].innerText.trim();
-    let pr=parsePrice(r.cells[4].innerText.trim());
+    let pr=parseFloat(r.cells[4].innerText.toString().replace(",", ".")) || 0;
     let forn=r.cells[5].innerText.trim();
 
     if(!nome||!cod||!lote||!val){fail++;continue;}
