@@ -231,6 +231,9 @@ document.getElementById('btnSalvar').onclick = async ()=>{
     } else if(produtoId){
       const old = await getDoc(doc(db,`lojas/${lojaAtual}/produtos/${produtoId}`)); if(old.exists()) fotoURL = old.data().fotoURL || '';
     }
+    if (fotoBlob) {
+  fotoURL = await uploadToCloudinary(fotoBlob);
+}
 
     await setDoc(doc(db,`lojas/${lojaAtual}/produtos/${id}`),{
       nome, codigo, lote, preco, quantidade, setor,
