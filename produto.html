@@ -324,8 +324,12 @@ onAuthStateChanged(auth, async user=>{
         validadeEl.value = p.dataValidadeISO || "";
         document.getElementById("quantidade").value = p.quantidade ?? 0;
         if(p.fotoURL){ previewEl.src = p.fotoURL; previewEl.style.display = "block"; }
-        document.getElementById("tituloPaginaTexto")?.textContent = "Editar Produto";
-        document.getElementById("btnSalvar")?.textContent = "Salvar Alterações";
+        const titulo = document.getElementById("tituloPaginaTexto");
+if (titulo) titulo.textContent = "Editar Produto";
+
+const botaoSalvar = document.getElementById("btnSalvar");
+if (botaoSalvar) botaoSalvar.textContent = "Salvar Alterações";
+
       } else {
         // produto não encontrado — pode ser em outra loja
         // console.warn("Produto não encontrado na loja atual.");
