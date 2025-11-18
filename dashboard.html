@@ -14,7 +14,7 @@
 <!-- SIDEBAR - MENU VALITEC -->
 <aside class="sidebar">
     <div class="sidebar-logo">
-        <img src="assets/img/logo.png" alt="ValiTec" />
+        <img src="logo.png" alt="ValiTec" />
         <h2>ValiTec</h2>
     </div>
 
@@ -61,10 +61,49 @@
 
         <div class="kpi">
             <h2 id="pertoVencer">0</h2>
-            <span>Perto de Vencer (<= 5 dias)</span>
+            <span>Perto de Vencer ( <= 5 dias)</span>
         </div>
 
     </div>
+
+    <!-- BOTÃO PARA ABRIR O RESUMO POR SETOR -->
+<button id="abrirSetor" class="btn-abrir-setor">Resumo por Setor</button>
+
+<!-- MODAL DE SETORES -->
+<div id="modalSetor" class="modal-setor" style="
+    display:none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+">
+    <div style="
+        background: #1a1a1a;
+        padding: 20px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        color: white;
+    ">
+        <h2>Resumo por Setor</h2>
+
+        <canvas id="graficoSetoresModal" width="300" height="300"></canvas>
+
+        <button id="fecharSetor"
+            style="
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #ff5c5c;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        ">Fechar</button>
+    </div>
+</div>
 </section>
 
 <script>
