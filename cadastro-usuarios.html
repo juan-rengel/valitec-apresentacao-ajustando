@@ -5,94 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ValiTec MJ — Cadastro de Usuários</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="base.css">
 
   <!-- ======= Correções de responsividade específicas para o campo "Usuários Cadastrados" ======= -->
-  <style>
-    /* Caixa reduzida e centralizada para o bloco de usuários */
-    .usuarios-box {
-      max-width: 820px;      /* controla a largura total do bloco */
-      margin: 30px auto;
-      padding: 14px;
-      background: rgba(255,255,255,0.02);
-      border-radius: 12px;
-      box-sizing: border-box;
-    }
-
-    /* Container da tabela responsivo com scroll horizontal quando necessário */
-    .table-container {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Tabela interna — sem esticar além da caixa */
-    #tabelaUsuarios {
-      width: 100%;
-      min-width: 520px;           /* se precisar, permite scroll em telas pequenas */
-      border-collapse: collapse;
-      background: rgba(255,255,255,0.03);
-      border-radius: 8px;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-
-    /* Cabeçalho */
-    #tabelaUsuarios thead tr {
-      background: rgba(255,255,255,0.06);
-    }
-
-    /* Células */
-    #tabelaUsuarios th,
-    #tabelaUsuarios td {
-      padding: 12px 10px;
-      text-align: left;
-      color: #fff;
-      white-space: nowrap;        /* evita quebra de palavras internas que mudam layout */
-      font-size: 15px;
-      box-sizing: border-box;
-    }
-
-    /* Linhas alternadas / hover */
-    #tabelaUsuarios tbody tr:nth-child(odd) {
-      background: rgba(255,255,255,0.02);
-    }
-    #tabelaUsuarios tbody tr:hover {
-      background: rgba(0, 198, 255, 0.06);
-    }
-
-    /* Ajustes dos títulos (se o seu CSS original definir cores diferentes, estas regras tem prioridade local) */
-    #tabelaUsuarios th {
-      color: rgba(255,255,255,0.9);
-      font-weight: 600;
-    }
-
-    /* Mobile: reduz min-width e fontes, mantém a caixa centralizada */
-    @media (max-width: 800px) {
-      .usuarios-box {
-        max-width: 94%;
-        margin: 20px auto;
-        padding: 12px;
-      }
-      #tabelaUsuarios {
-        min-width: 420px;
-      }
-      #tabelaUsuarios th, #tabelaUsuarios td {
-        padding: 10px 8px;
-        font-size: 14px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      #tabelaUsuarios {
-        min-width: 360px;
-      }
-      #tabelaUsuarios th, #tabelaUsuarios td {
-        padding: 8px 6px;
-        font-size: 13px;
-      }
-    }
-  </style>
+  
   <!-- ========================================================================================== -->
 </head>
 <body>

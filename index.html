@@ -4,113 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ValiTec MJ — Login</title>
-
+<link rel="stylesheet" href="base.css">	
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --accent:#00c8ff;
-      --text:#dff6ff;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      background: radial-gradient(circle at 20% 20%, #0a0f1f, #050912);
-      color: var(--text);
-      min-height: 100vh;
-      font-family: 'Poppins', sans-serif;
-      overflow: hidden;
-    }
-
-    #particleCanvas { position: fixed; inset: 0; z-index: 0; }
-
-    .login-container {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 330px;
-      padding: 2.2rem;
-      background: rgba(12,20,35,0.82);
-      border-radius: 16px;
-      border: 1px solid rgba(0,200,255,0.45);
-      box-shadow: 0 0 25px rgba(0,200,255,0.25);
-      backdrop-filter: blur(10px);
-      animation: fadeIn .35s ease-out;
-      z-index: 5;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -60%); }
-      to   { opacity: 1; transform: translate(-50%, -50%); }
-    }
-
-    .login-container h2 {
-      text-align: center;
-      margin-bottom: 18px;
-      color: var(--accent);
-      text-shadow: 0 0 14px rgba(0,200,255,0.45);
-      font-weight: 600;
-    }
-
-    #loginForm {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    label {
-      font-size: 13px;
-      color:#9fdfff;
-      margin: 0 0 4px 0;
-      display: block;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 14px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.18);
-      color:white;
-      outline:none;
-      transition:.25s;
-    }
-
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(0,200,255,0.45);
-    }
-
-    button {
-      margin-top: 4px;
-      width: 100%; padding: 12px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      background: linear-gradient(90deg,#00b4d8,#009bff);
-      color: #00131e;
-      box-shadow: 0 0 14px rgba(0,200,255,0.45);
-      transition:.25s;
-    }
-
-    button:hover { transform: scale(1.05); filter:brightness(1.15); }
-
-    .error { color:#ff6f6f; margin-top:2px; text-align:center; min-height:18px; }
-
-    h1{
-      text-align: center;
-      margin-bottom: 18px;
-      text-shadow: 0 0 14px rgba(29, 105, 124, 0.575);
-      color: #07fff3f5;
-      font-weight: 500;
-      
-    }
-  </style>
+ 
 </head>
 
-<body>
+<body class="login-page">
 
 <canvas id="particleCanvas"></canvas>
 
