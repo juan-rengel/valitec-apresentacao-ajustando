@@ -138,6 +138,41 @@
 
 </section>
 
+<!-- MODAL DE IMPORTAÇÃO EXCEL -->
+<div id="excelModal" 
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+            align-items:center; justify-content:center; z-index:99999;">
+
+  <div style="background:#fff; padding:20px; border-radius:12px; width:90%; max-width:900px;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h3 style="margin:0;">Importar Produtos do Excel</h3>
+      <button id="closeExcelModal" style="font-size:18px; cursor:pointer;">✖</button>
+    </div>
+
+    <table id="excelTable" border="1" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Código</th>
+          <th>Lote</th>
+          <th>Validade</th>
+          <th>Preço</th>
+          <th>Fornecedor</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div style="margin-top:15px; text-align:right;">
+      <button id="saveAllLines" class="btn">Salvar Todos</button>
+    </div>
+
+  </div>
+</div>
+
 <script>
 function toggleSidebar(){ document.querySelector('.sidebar').classList.toggle('open'); }
 
@@ -456,7 +491,7 @@ document.getElementById("btnSalvar").onclick = async ()=>{
     }, { merge: true });
 
     alert("Produto salvo com sucesso!");
-    location.href = "Lista-produtos.html";
+    location.href = "Lista-produto.html";
   }catch(err){
     console.error("Erro ao salvar produto:", err);
     alert("Erro ao salvar produto. Veja console.");
