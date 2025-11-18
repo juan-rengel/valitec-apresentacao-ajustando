@@ -127,6 +127,7 @@ if (canvas) {
   let particles = [];
   let w, h;
   function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+
   window.addEventListener('resize', resize); resize();
   for (let i = 0; i < 60; i++) particles.push({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*2+1, dx:(Math.random()-0.5)*0.4, dy:(Math.random()-0.5)*0.4 });
   function draw(){ ctx.clearRect(0,0,w,h); ctx.fillStyle='rgba(0,200,255,0.35)'; particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); }); connect(); move(); requestAnimationFrame(draw); }
