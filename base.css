@@ -266,6 +266,12 @@ badge-success { background: #1a3; color: #7fffbd; }
   text-shadow: 0 0 6px var(--primary-glow);
 }
 
+.sidebar-logo img {
+    width: 50px;      /* diminui a largura */
+    height: auto;     /* mantém proporção */
+    object-fit: contain;
+}
+
 /* Área da página */
 .page { margin-left: 270px; padding: 20px; }
 
