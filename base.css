@@ -234,22 +234,7 @@ badge-success { background: #1a3; color: #7fffbd; }
 .alert-danger  { background: rgba(255,0,80,0.12);  color: var(--danger); }
 .alert-warning { background: rgba(255,200,0,0.12); color: var(--warning); }
 
-/* -------------------------------------------------------------
-   MENU LATERAL PROFISSIONAL
-   ------------------------------------------------------------- */
-.sidebar {
-  width: 250px;
-  background: #061024;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.45);
-  transition: var(--transition);
-}
+
 
 .sidebar a {
   padding: 12px 14px;
@@ -327,14 +312,6 @@ badge-success { background: #1a3; color: #7fffbd; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* -------------------------------------------------------------
-   RESPONSIVIDADE MÁXIMA
-   ------------------------------------------------------------- */
-@media (max-width: 900px) {
-  .page { margin-left: 0; }
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
-}
 
 
 .sidebar-menu a {
@@ -587,14 +564,6 @@ body.login-page {
 
 .app-container { display: flex; gap: 0; min-height: 100vh; position: relative; z-index: 1; }
 
-.sidebar {
-  width: 220px;
-  background: rgba(6,18,38,0.9);
-  padding: 20px;
-  color: #cfefff;
-  border-right: 1px solid rgba(0,119,255,0.06);
-  box-shadow: 2px 0 18px rgba(0,0,0,0.45);
-}
 
 /* Sidebar links */
 .sidebar nav a {
@@ -660,79 +629,53 @@ canvas { width:100% !important; height:auto !important; display:block; max-width
 }
 
 
+/* ======================================
+      SIDEBAR — VERSÃO FINAL CORRIGIDA
+   ====================================== */
 
-
-
-
-
-
-
-/* ===============================
-   CORREÇÃO DO MENU LATERAL (SIDEBAR)
-   =============================== */
-
-/* Posição padrão no desktop */
 .sidebar {
-  width: 220px;
-  min-height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 10;
-  transform: translateX(0);
-  transition: 0.28s ease;
-}
-
-/* Conteúdo principal ajustado */
-.app-container .main {
-  margin-left: 220px;
-}
-
-/* BOTÃO HAMBÚRGUER */
-.hamburger {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 20;
-  background: rgba(0, 200, 255, 0.15);
-  border: 1px solid rgba(0, 200, 255, 0.4);
-  color: #aef;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 20px;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  display: none; /* escondido no desktop */
-}
-
-/* ========= MOBILE ========= */
-@media (max-width: 880px) {
-
-  .sidebar {
-    transform: translateX(-260px); /* sidebar escondida */
-    box-shadow: none;
+    width: 240px;
+    background: #061024;
+    height: 100vh;
     position: fixed;
-  }
+    top: 0;
+    left: -260px;  /* escondida inicialmente */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.45);
+    transition: left 0.3s ease-in-out;
+    z-index: 9999 !important;
+}
 
-  /* quando o JS ativa .open => aparece */
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 0 0 25px rgba(0, 200, 255, 0.25);
-  }
+.sidebar.open {
+    left: 0;
+}
 
-  /* botão aparece no mobile */
-  .hamburger {
-    display: block;
-  }
+@media (min-width: 900px) {
+    .sidebar {
+        left: 0; /* no desktop fica sempre aberta */
+    }
+    .page {
+        margin-left: 260px;
+    }
+}
 
-  /* empurra conteúdo para baixo no mobile */
-  .app-container .main {
-    margin-left: 0 !important;
-  }
+@media (max-width: 900px) {
+    .page { margin-left: 0; }
 }
 
 
-
+/* BOTÃO MENU (HEADER) */
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 26px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
 
 
 
