@@ -236,6 +236,10 @@ badge-success { background: #1a3; color: #7fffbd; }
 
 
 
+
+
+
+
 .sidebar a {
   padding: 12px 14px;
   text-decoration: none;
@@ -627,7 +631,6 @@ canvas { width:100% !important; height:auto !important; display:block; max-width
 @media (max-width:480px) {
   .resumo-card h3 { font-size:20px; }
 }
-
 
 /* ======================================
       SIDEBAR — VERSÃO FINAL CORRIGIDA
