@@ -11,23 +11,56 @@
 
   <!-- CSS PRINCIPAL -->
   <link rel="stylesheet" href="base.css">
+<style>
+  .btnDelete{
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 5px 5px 5px rgba(250, 1, 22, 0.493);
+     margin: 10px;    
+  }
 
-  <style>
-    .lista-produtos { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-top:20px; }
-    .produto-card { background:var(--bg-card); padding:14px; border-radius:14px; box-shadow:var(--shadow); display:flex; gap:12px; transition:0.2s; position:relative; }
-    .produto-card:hover { transform:translateY(-3px); box-shadow:0 0 18px var(--primary-glow); }
-    .produto-card img { width:90px; height:90px; border-radius:10px; object-fit:cover; cursor:pointer; }
+  .btnDelete:hover{
+    cursor: pointer;
+    box-shadow: 5px 5px 5px rgb(250, 1, 22);
 
-    /* ZOOM */
-    .zoomModal { position:fixed; inset:0; background:rgba(0,0,0,.7); display:flex; align-items:center; justify-content:center; z-index:9999; backdrop-filter:blur(5px); }
-    .zoomModal img { max-width:90%; max-height:90%; border-radius:12px; box-shadow:0 0 20px #000; }
+  }
 
-    .btn { padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; border:none; }
-    .btn-reverter { background:#4eff9a; color:#000; }
-    .btn-delete { background:#ff5c5c; color:#000; }
+  .btnEdit{
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 5px 5px 5px rgba(1, 250, 22, 0.493);
+  }
+   .btnEdit:hover{
+    box-shadow: 5px 5px 5px rgb(1, 250, 22);
+    cursor: pointer;
+  }
 
-    .header { background:var(--bg-card); padding:14px; border-radius:var(--radius); display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow); }
-  </style>
+
+  /* --- ZOOM FULLSCREEN --- */
+.zoomModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.zoomModal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #000;
+}
+
+
+ 
+</style>
+ 
 </head>
 <body>
 
@@ -126,10 +159,18 @@ function exibirLista(lista) {
   lista.forEach(p => {
     const card = document.createElement("div");
     card.className = "produto-card";
-    card.style.border = "1px solid #4eff9a";
+    card.style.border = "1px solid #00fafa48";
+    card.style.borderRadius = "10px";
+    card.style.padding = "10px";
+    card.style.borderColor = "#00fafa48";
 
     card.innerHTML = `
-      <img src="${p.fotoURL}" style="width:70px;border-radius:6px;" onerror="this.style.display='none'">
+     <img src="${p.fotoURL}" 
+     style="width:70px;border-radius:6px;cursor:pointer;" 
+     onclick="abrirZoom('${p.fotoURL}')"
+     onerror="this.style.display='none'">
+
+
       <div style="flex:1;">
         <strong>${p.nome}</strong><br>
         ${p.setor}<br>
@@ -145,7 +186,7 @@ btnReverter.className = "btnEdit";
 btnReverter.style.background = "#4eff9a";
 btnReverter.style.color = "#000";
 btnReverter.style.fontWeight = "600";
-btnReverter.style.borderRadius = "6px";
+btnReverter.style.borderRadius = "10px";
 
 btnReverter.onclick = async () => {
   const confSnap = await getDoc(doc(db, `lojas/${p.loja}/config/geral`));
